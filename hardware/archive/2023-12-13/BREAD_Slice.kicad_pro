@@ -52,13 +52,7 @@
           "min_clearance": 0.508
         }
       },
-      "diff_pair_dimensions": [
-        {
-          "gap": 0.0,
-          "via_gap": 0.0,
-          "width": 0.0
-        }
-      ],
+      "diff_pair_dimensions": [],
       "drc_exclusions": [],
       "meta": {
         "filename": "board_design_settings.json",
@@ -114,6 +108,7 @@
         "unconnected_items": "error",
         "unresolved_variable": "error",
         "via_dangling": "warning",
+        "zone_has_empty_net": "error",
         "zones_intersect": "error"
       },
       "rule_severitieslegacy_courtyards_overlap": true,
@@ -122,7 +117,7 @@
         "allow_blind_buried_vias": false,
         "allow_microvias": false,
         "max_error": 0.005,
-        "min_clearance": 0.1,
+        "min_clearance": 0.0,
         "min_connection": 0.0,
         "min_copper_edge_clearance": 0.025,
         "min_hole_clearance": 0.25,
@@ -188,7 +183,7 @@
         0.5,
         1.0,
         1.5,
-        3.0
+        2.0
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -220,14 +215,6 @@
         {
           "diameter": 0.0,
           "drill": 0.0
-        },
-        {
-          "diameter": 0.5,
-          "drill": 0.0
-        },
-        {
-          "diameter": 1.0,
-          "drill": 0.5
         },
         {
           "diameter": 1.5,
@@ -429,6 +416,7 @@
     "rule_severities": {
       "bus_definition_conflict": "error",
       "bus_entry_needed": "error",
+      "bus_label_syntax": "error",
       "bus_to_bus_conflict": "error",
       "bus_to_net_conflict": "error",
       "conflicting_netclasses": "error",
@@ -590,7 +578,7 @@
       "operating_point_overlay_v_precision": 3,
       "operating_point_overlay_v_range": "~V",
       "overbar_offset_ratio": 1.23,
-      "pin_symbol_size": 25.0,
+      "pin_symbol_size": 0.0,
       "text_offset_ratio": 0.08
     },
     "legacy_lib_dir": "",
@@ -622,7 +610,7 @@
   },
   "sheets": [
     [
-      "66043bca-a260-4915-9fce-8a51d324c687",
+      "b6f74721-6f5a-43a9-b4ef-0d199625bae1",
       "Root"
     ]
   ],
