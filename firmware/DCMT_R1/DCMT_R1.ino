@@ -6,9 +6,9 @@
 #define DIR1 5
 #define MC1 6
 #define BR1 7
-#define DIR2 9
+#define DIR2 11
 #define MC2 10
-#define BR2 11
+#define BR2 9
 
 bool dir1 = 1;
 bool dir2 = 1;
@@ -45,7 +45,6 @@ void setup()
     pinMode(DIR2, OUTPUT);
     pinMode(BR1, OUTPUT);
     pinMode(BR2, OUTPUT);
-    pinMode(LED_BUILTIN, OUTPUT);
 
     Serial.begin(9600);
     Wire.begin(I2C_ADR);
