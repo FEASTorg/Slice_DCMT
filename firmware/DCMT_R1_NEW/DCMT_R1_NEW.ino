@@ -3,8 +3,8 @@
 
 #define I2C_ADR 14 // Set this however you want
 
-#define DIR1 7
-#define MC1 6
+#define DIR1 6
+#define MC1 7
 #define BR1 8
 // #define THRM1 9
 #define DIR2 10
@@ -12,10 +12,10 @@
 #define BR2 12
 // #define THRM2 13
 
-#define B2 A0
-#define A2 A1
-#define B1 A2
-#define A1 A3
+// #define B2 A0
+// #define A2 A1
+// #define B1 A2
+// #define A1 A3
 
 bool dir1 = 1; // start with forward
 bool dir2 = 1;
