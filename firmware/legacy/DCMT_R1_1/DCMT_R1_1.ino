@@ -3,14 +3,16 @@
 
 #define I2C_ADR 14 // Set this however you want
 
-#define DIR1 6
-#define MC1 7
+#define DIR1 7
+#define MC1 6
 #define BR1 8
 // #define THRM1 9
+// #define CSEN1 A6
 #define DIR2 10
 #define MC2 11
 #define BR2 12
 // #define THRM2 13
+// #define CSEN2 A7
 
 // #define B2 A0
 // #define A2 A1
@@ -211,6 +213,13 @@ void serialCommandHandler()
             {
                 motorSelect = command.substring(firstComma + 1, secondComma).toInt();
                 speedSelect = command.substring(secondComma + 1).toInt();
+
+                // Enforce the range -100 to 100
+                if (speedSelect < -100)
+                    speedSelect = -100;
+                if (speedSelect > 100)
+                    speedSelect = 100;
+
                 changeParam = true;
                 Serial.print("Serial update: motorSelect = ");
                 Serial.print(motorSelect);
