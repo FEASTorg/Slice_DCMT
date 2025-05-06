@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 5e-06,
-          "height": 1e-05,
-          "width": 1e-05
+          "drill": 0.762,
+          "height": 1.524,
+          "width": 1.524
         },
         "silk_line_width": 0.12,
         "silk_text_italic": false,
@@ -49,7 +49,7 @@
         "silk_text_upright": false,
         "zones": {
           "45_degree_only": false,
-          "min_clearance": 0.5
+          "min_clearance": 0.508
         }
       },
       "diff_pair_dimensions": [
@@ -142,7 +142,7 @@
         "min_silk_clearance": 0.0,
         "min_text_height": 0.8,
         "min_text_thickness": 0.08,
-        "min_through_hole_diameter": 0.2,
+        "min_through_hole_diameter": 0.3,
         "min_track_width": 0.2,
         "min_via_annular_width": 0.05,
         "min_via_diameter": 0.4,
@@ -195,7 +195,6 @@
       ],
       "track_widths": [
         0.0,
-        0.25,
         0.5,
         1.0,
         1.5,
@@ -234,7 +233,7 @@
         },
         {
           "diameter": 0.5,
-          "drill": 0.25
+          "drill": 0.0
         },
         {
           "diameter": 1.0,
@@ -511,24 +510,6 @@
         "via_diameter": 0.8,
         "via_drill": 0.4,
         "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "clearance": 1.25,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 1,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
-        "name": "HV Relay",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 0,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 3.0,
-        "via_diameter": 0.8,
-        "via_drill": 0.4,
-        "wire_width": 6
       }
     ],
     "meta": {
@@ -536,64 +517,7 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": [
-      {
-        "netclass": "",
-        "pattern": ""
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "NC2"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "NO2"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "ESTOP2"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "HV Line"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "ESTOPA2"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "IN2"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "ESTOPB2"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "FUSE2"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "NC1"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "NO1"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "IN1"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "ESTOP1"
-      },
-      {
-        "netclass": "HV Relay",
-        "pattern": "FUSE1"
-      }
-    ]
+    "netclass_patterns": []
   },
   "pcbnew": {
     "last_paths": {
@@ -724,14 +648,6 @@
     [
       "66043bca-a260-4915-9fce-8a51d324c687",
       "Root"
-    ],
-    [
-      "634e2c90-e691-4993-8f8b-11c4020f0bdb",
-      "Motor Driver LMD185001"
-    ],
-    [
-      "4b90ec1d-8558-47e2-9e5d-5221b0d13e07",
-      "Motor Driver LMD185002"
     ]
   ],
   "text_variables": {}
