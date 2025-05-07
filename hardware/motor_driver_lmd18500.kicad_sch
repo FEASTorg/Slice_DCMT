@@ -1352,266 +1352,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "power:+VDC"
-			(power)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "#PWR"
-				(at 0 -2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Value" "+VDC"
-				(at 0 6.35 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"+VDC\""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "global power"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "+VDC_0_1"
-				(polyline
-					(pts
-						(xy -1.143 3.175) (xy 1.143 3.175)
-					)
-					(stroke
-						(width 0.508)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 0 3.175)
-					(radius 1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 2.032) (xy 0 4.318)
-					)
-					(stroke
-						(width 0.508)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "+VDC_1_1"
-				(pin power_in line
-					(at 0 0 90)
-					(length 0)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "power:-VDC"
-			(power)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "#PWR"
-				(at 0 -2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Value" "-VDC"
-				(at 0 6.35 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"-VDC\""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "global power"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "-VDC_0_1"
-				(polyline
-					(pts
-						(xy -1.143 3.175) (xy 1.143 3.175)
-					)
-					(stroke
-						(width 0.508)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 0 3.175)
-					(radius 1.905)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "-VDC_1_1"
-				(pin power_in line
-					(at 0 0 90)
-					(length 0)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "power:PWR_FLAG"
 			(power)
 			(pin_numbers
@@ -1785,13 +1525,13 @@
 	(junction
 		(at 185.42 64.77)
 		(diameter 0)
-		(color 0 0 0 0)
+		(color 0 0 132 1)
 		(uuid "19d11899-8ff5-4836-8baf-3a8c37984a66")
 	)
 	(junction
 		(at 185.42 62.23)
 		(diameter 0)
-		(color 0 0 0 0)
+		(color 132 0 0 1)
 		(uuid "29af54e2-fb73-4b5d-b56b-2fec470aa023")
 	)
 	(junction
@@ -1813,12 +1553,6 @@
 		(uuid "6e294e98-2447-4a5a-930c-ac40776e8314")
 	)
 	(junction
-		(at 185.42 57.15)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "c35fe067-b2a3-49a3-a0d1-980d624a507c")
-	)
-	(junction
 		(at 87.63 54.61)
 		(diameter 0)
 		(color 194 0 194 1)
@@ -1835,12 +1569,6 @@
 		(diameter 0)
 		(color 0 194 194 1)
 		(uuid "e034dd7e-6aeb-482d-b0f4-1c1c0dc6f312")
-	)
-	(junction
-		(at 185.42 59.69)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "e4671dcc-adb8-4249-b0c1-dacdd57b3112")
 	)
 	(junction
 		(at 147.32 91.44)
@@ -2087,17 +1815,6 @@
 	)
 	(wire
 		(pts
-			(xy 185.42 59.69) (xy 227.33 59.69)
-		)
-		(stroke
-			(width 0.2032)
-			(type default)
-			(color 0 0 0 1)
-		)
-		(uuid "711ce014-95f6-4807-9d81-160b20bee92b")
-	)
-	(wire
-		(pts
 			(xy 68.58 133.35) (xy 68.58 139.7)
 		)
 		(stroke
@@ -2142,17 +1859,6 @@
 	)
 	(wire
 		(pts
-			(xy 217.17 53.34) (xy 227.33 53.34)
-		)
-		(stroke
-			(width 0.2032)
-			(type default)
-			(color 204 102 0 1)
-		)
-		(uuid "89aedb14-d873-4b86-98df-69c6080d612a")
-	)
-	(wire
-		(pts
 			(xy 133.35 78.74) (xy 147.32 78.74)
 		)
 		(stroke
@@ -2172,17 +1878,6 @@
 			(color 0 194 0 1)
 		)
 		(uuid "8e83122e-f165-4c91-a5a7-7b33aa3dfbde")
-	)
-	(wire
-		(pts
-			(xy 217.17 53.34) (xy 217.17 57.15)
-		)
-		(stroke
-			(width 0.2032)
-			(type default)
-			(color 204 102 0 1)
-		)
-		(uuid "a5d4bde3-ea38-4179-9fc5-b6a613a79b41")
 	)
 	(wire
 		(pts
@@ -2337,17 +2032,6 @@
 			(color 0 0 0 1)
 		)
 		(uuid "e4097ceb-0541-4fe2-abf4-a07fb856e936")
-	)
-	(wire
-		(pts
-			(xy 185.42 57.15) (xy 217.17 57.15)
-		)
-		(stroke
-			(width 0.2032)
-			(type default)
-			(color 204 102 0 1)
-		)
-		(uuid "e996901e-4f85-4eab-9ae4-e66e9ad562cb")
 	)
 	(wire
 		(pts
@@ -2762,148 +2446,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:-VDC")
-		(at 227.33 59.69 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "21602468-ad1a-445f-940c-a3f9671f39cc")
-		(property "Reference" "#PWR022"
-			(at 224.79 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 233.68 59.6899 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 227.33 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 227.33 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"-VDC\""
-			(at 227.33 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "f49132da-54fa-42d5-91d3-619fadd53f13")
-		)
-		(instances
-			(project "BREAD_Slice"
-				(path "/66043bca-a260-4915-9fce-8a51d324c687/4b90ec1d-8558-47e2-9e5d-5221b0d13e07"
-					(reference "#PWR024")
-					(unit 1)
-				)
-				(path "/66043bca-a260-4915-9fce-8a51d324c687/634e2c90-e691-4993-8f8b-11c4020f0bdb"
-					(reference "#PWR022")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+VDC")
-		(at 227.33 53.34 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "4b987fe4-4e96-4b87-8662-5b987938471e")
-		(property "Reference" "#PWR021"
-			(at 224.79 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "+VDC"
-			(at 233.68 53.3399 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 227.33 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 227.33 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+VDC\""
-			(at 227.33 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "e7b0d4e8-8585-4513-87f2-403fcec329c2")
-		)
-		(instances
-			(project "BREAD_Slice"
-				(path "/66043bca-a260-4915-9fce-8a51d324c687/4b90ec1d-8558-47e2-9e5d-5221b0d13e07"
-					(reference "#PWR023")
-					(unit 1)
-				)
-				(path "/66043bca-a260-4915-9fce-8a51d324c687/634e2c90-e691-4993-8f8b-11c4020f0bdb"
-					(reference "#PWR021")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 68.58 129.54 0)
 		(unit 1)
@@ -3206,7 +2748,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "aaf49045-927b-4bf6-8d52-48539d1a0f22")
-		(property "Reference" "J6"
+		(property "Reference" "J4"
 			(at 193.04 59.6901 0)
 			(effects
 				(font
@@ -3260,11 +2802,11 @@
 		(instances
 			(project "BREAD_Slice"
 				(path "/66043bca-a260-4915-9fce-8a51d324c687/4b90ec1d-8558-47e2-9e5d-5221b0d13e07"
-					(reference "J7")
+					(reference "J6")
 					(unit 1)
 				)
 				(path "/66043bca-a260-4915-9fce-8a51d324c687/634e2c90-e691-4993-8f8b-11c4020f0bdb"
-					(reference "J6")
+					(reference "J4")
 					(unit 1)
 				)
 			)
@@ -3423,7 +2965,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "d11d6dd0-7103-438b-8300-dd10153aabb8")
-		(property "Reference" "J8"
+		(property "Reference" "J5"
 			(at 193.04 62.2299 0)
 			(effects
 				(font
@@ -3477,11 +3019,11 @@
 		(instances
 			(project "BREAD_Slice"
 				(path "/66043bca-a260-4915-9fce-8a51d324c687/4b90ec1d-8558-47e2-9e5d-5221b0d13e07"
-					(reference "J9")
+					(reference "J7")
 					(unit 1)
 				)
 				(path "/66043bca-a260-4915-9fce-8a51d324c687/634e2c90-e691-4993-8f8b-11c4020f0bdb"
-					(reference "J8")
+					(reference "J5")
 					(unit 1)
 				)
 			)
