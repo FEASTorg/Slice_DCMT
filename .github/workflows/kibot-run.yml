@@ -34,7 +34,7 @@ jobs:
       - name: Run ERC
         run: |
           ls -la hardware/
-          make erc
+          make -C hardware/ erc
 
       - name: Upload ERC Results
         uses: actions/upload-artifact@v4
@@ -52,7 +52,7 @@ jobs:
           submodules: true
 
       - name: Run DRC
-        run: make drc
+        run: make -C hardware/ drc
 
       - name: Upload DRC Results
         uses: actions/upload-artifact@v4
@@ -71,7 +71,7 @@ jobs:
           submodules: true
 
       - name: Generate Schematic Fab Files
-        run: make sch_fab
+        run: make -C hardware/ sch_fab
 
       - name: Upload Schematic Fab Results
         uses: actions/upload-artifact@v4
@@ -90,7 +90,7 @@ jobs:
           submodules: true
 
       - name: Generate PCB Fab Files
-        run: make pcb_fab
+        run: make -C hardware/ pcb_fab
 
       - name: Upload PCB Fab Results
         uses: actions/upload-artifact@v4
