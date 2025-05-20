@@ -1,0 +1,99 @@
+name: KiBot CI/CD
+
+on:
+  push:
+    paths:
+      - "hardware/BREAD_Slice.kicad_sch"
+      - "hardware/BREAD_Slice.kicad_pcb"
+      - "config.kibot.yaml"
+      - "Makefile"
+      - ".github/workflows/kibot-run.yml"
+  pull_request:
+    paths:
+      - "hardware/BREAD_Slice.kicad_sch"
+      - "hardware/BREAD_Slice.kicad_pcb"
+      - "config.kibot.yaml"
+      - "Makefile"
+      - ".github/workflows/kibot-run.yml"
+  schedule:
+    # Run at 05:43 UTC every Wednesday
+    - cron: "43 5 * * 3"
+
+env:
+  OUT_DIR: Generated
+
+jobs:
+  ERC:
+    runs-on: ubuntu-latest
+    container: ghcr.io/inti-cmnb/kicad9_auto:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Run ERC
+        run: |
+          ls -la hardware/
+          make -C hardware/ erc
+
+      - name: Upload ERC Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ERC_Output
+          path: hardware/${{ env.OUT_DIR }}
+
+  DRC:
+    runs-on: ubuntu-latest
+    container: ghcr.io/inti-cmnb/kicad9_auto:latest
+    needs: ERC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Run DRC
+        run: make -C hardware/ drc
+
+      - name: Upload DRC Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: DRC_Output
+          path: hardware/${{ env.OUT_DIR }}
+
+  FabSch:
+    name: Schematic Fabrication files
+    runs-on: ubuntu-latest
+    container: ghcr.io/inti-cmnb/kicad9_auto:latest
+    needs: ERC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Generate Schematic Fab Files
+        run: make -C hardware/ sch_fab
+
+      - name: Upload Schematic Fab Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: FabSch_Output
+          path: hardware/${{ env.OUT_DIR }}
+
+  FabPCB:
+    name: PCB Fabrication files
+    runs-on: ubuntu-latest
+    container: ghcr.io/inti-cmnb/kicad9_auto_full:latest
+    needs: DRC
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Generate PCB Fab Files
+        run: make -C hardware/ pcb_fab
+
+      - name: Upload PCB Fab Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: FabPCB_Output
+          path: hardware/${{ env.OUT_DIR }}
