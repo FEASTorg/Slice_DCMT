@@ -74,6 +74,15 @@ jobs:
             --project "$PROJECT_NAME" \
             --artifacts $(cat artifacts.txt | paste -sd "," -)
 
+      - name: Convert root index.md to index.html
+        run: |
+          if [[ -f docs/index.md ]]; then
+            pandoc docs/index.md -o docs/index.html
+            echo "✔ Converted index.md to index.html"
+          else
+            echo "⚠ No index.md found at docs/index.md"
+          fi
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
