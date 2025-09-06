@@ -3,13 +3,13 @@ name: KiBot CI/CD
 on:
   push:
     paths:
-      - "hardware/"
+      - "hardware/**"
       - "config.kibot.yaml"
       - "Makefile"
       - ".github/workflows/kibot-run.yml"
   pull_request:
     paths:
-      - "hardware/"
+      - "hardware/**"
       - "config.kibot.yaml"
       - "Makefile"
       - ".github/workflows/kibot-run.yml"
