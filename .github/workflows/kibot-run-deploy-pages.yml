@@ -107,14 +107,12 @@ jobs:
 
       - name: Generate index.md from template
         run: |
-          DATE=$(date '+%Y-%m-%d')
-          PROJECT_NAME="${{ steps.config.outputs.project_name }}"
-          LINKS="$(printf -- '- [Schematic.pdf](./Schematic.pdf)\n- [PCB.pdf](./PCB.pdf)\n- [kibot.log](./kibot.log)\n')"
+          export DATE=$(date '+%Y-%m-%d')
+          export PROJECT_NAME="${{ steps.config.outputs.project_name }}"
+          export LINKS="$(printf -- '- [Schematic.pdf](./Schematic.pdf)\n- [PCB.pdf](./PCB.pdf)\n- [kibot.log](./kibot.log)')"
 
-          sed -e "s|{{project_name}}|$PROJECT_NAME|g" \
-              -e "s|{{date}}|$DATE|g" \
-              -e "s|{{output_links}}|$LINKS|g" \
-              docs/index_template.md > docs/index.md
+          envsubst < docs/index_template.md > docs/index.md
+
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
