@@ -1,12 +1,15 @@
 name: Deploy to GitHub Pages
 
 on:
-  workflow_run:
-    workflows: ["Generate KiBot index"]
-    types: [completed]
+  workflow_call:
+    inputs:
+      kibot_run_id:
+        description: "Run ID from KiBot CI to fetch artifacts"
+        required: true
+        type: string
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -16,12 +19,45 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yq
+
+      - name: Load artifact list
+        id: cfg
+        run: |
+          ARTS=$(yq -r '.artifacts[]' docs/site_config.yml || true)
+          echo "artifacts<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$ARTS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Download latest KiBot artifact (from KiBot run)
+        uses: actions/download-artifact@v5
+        with:
+          name: kibot-site
+          path: _downloads
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.kibot_run_id }}
+
+      - name: Stage selected KiBot outputs into docs/kibot (build-only)
+        run: |
+          mkdir -p docs/kibot
+          printf '%s\n' "${{ steps.cfg.outputs.artifacts }}" | while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            SRC=$(find _downloads -type f -name "$f" | head -n1 || true)
+            if [ -n "$SRC" ]; then
+              cp "$SRC" docs/kibot/
+            else
+              echo "Warning: $f not found in artifact"
+            fi
+          done
+          touch docs/.nojekyll
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

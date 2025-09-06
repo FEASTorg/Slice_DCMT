@@ -1,28 +1,27 @@
 name: KiBot CI/CD
 
-permissions:
-  contents: read
-
 on:
-  push:
-    paths:
-      - "_config.yml"
-      - "hardware/**"
-      - ".github/workflows/**"
-      - "docs/**"
-  pull_request:
-    paths:
-      - "_config.yml"
-      - "hardware/**"
-      - ".github/workflows/**"
-      - "docs/**"
-  schedule:
-    - cron: "43 5 * * 3"
+  workflow_call:
+    outputs:
+      kibot_run_id:
+        description: "Run ID to fetch artifacts from"
+        value: ${{ jobs.meta.outputs.run_id }}
 
 env:
   CONFIG_FILE: docs/site_config.yml
 
+permissions:
+  contents: read
+
 jobs:
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.setid.outputs.run_id }}
+    steps:
+      - id: setid
+        run: echo "run_id=$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+
   ERC:
     runs-on: ubuntu-latest
     container: ghcr.io/inti-cmnb/kicad9_auto:latest
@@ -47,24 +46,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { submodules: true }
-
-      - name: Install yq (inside container)
+      - name: Install yq
         run: |
           apt-get update
           apt-get install -y yq
-
-      - name: Load config (OUT_DIR)
+      - name: Load OUT_DIR
         id: config
         run: |
           OUT_DIR=$(yq -r '.output_dir' "$CONFIG_FILE")
           echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
-
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
-
       - name: Generate PCB Fab Files
         run: make -C hardware/ pcb_fab
-
       - name: Upload KiBot outputs
         uses: actions/upload-artifact@v4
         with:

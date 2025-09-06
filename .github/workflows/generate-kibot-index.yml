@@ -1,60 +1,26 @@
 name: Generate KiBot index
 
 on:
-  workflow_run:
-    workflows:
-      - "Auto-generate docs index for SLICE"
-      - "KiBot CI/CD"
-    types: [completed]
+  workflow_call:
 
 permissions:
   contents: write
 
-concurrency:
-  group: generate-kibot-index
-  cancel-in-progress: true
-
 jobs:
   generate-kibot-index:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.name == 'Auto-generate docs index for SLICE'
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           persist-credentials: true
           fetch-depth: 0
-
-      - name: Sync to latest main
-        run: |
-          git fetch origin main
-          git checkout -B main origin/main
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-
-      - name: Install dependencies
+      - uses: actions/setup-python@v4
+        with: { python-version: "3.x" }
+      - name: Install deps
         run: pip install markdown2 pyyaml
-
       - name: Generate docs/kibot/index.md
         run: |
           python scripts/gen_kibot_index.py \
             --config docs/site_config.yml \
             --template docs/kibot/index_template.md \
             --out-md docs/kibot/index.md
-
-      - name: Commit & push (with rebase retry)
-        run: |
-          set -e
-          git config user.name "bot"
-          git config user.email "bot@users.noreply.github.com"
-          git add docs/kibot/index.md
-          if ! git diff --cached --quiet; then
-            git commit -m "📄 Auto-generate KiBot index page"
-            git push origin HEAD:main || (git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main)
-          else
-            echo "✅ KiBot index is already up to date."
-          fi
