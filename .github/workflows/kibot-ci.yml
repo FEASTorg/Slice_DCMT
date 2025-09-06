@@ -57,8 +57,20 @@ jobs:
           echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
-      - name: Generate PCB Fab Files
-        run: make -C hardware/ pcb_fab
+      - name: Generate PCB Fab Files (with retry)
+        run: |
+          for i in 1 2 3; do
+            if make -C hardware/ pcb_fab; then
+              echo "Success on attempt $i"
+              break
+            elif [ $i -eq 3 ]; then
+              echo "Failed after 3 attempts"
+              exit 1
+            else
+              echo "Attempt $i failed, retrying in 10s..."
+              sleep 10
+            fi
+          done
       - name: Upload KiBot outputs
         uses: actions/upload-artifact@v4
         with:
