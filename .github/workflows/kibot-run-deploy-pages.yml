@@ -76,13 +76,9 @@ jobs:
   pages:
     needs: Fab
     runs-on: ubuntu-latest
+    container: mikefarah/yq:latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install yq
-        run: |
-          apt-get update
-          apt-get install -y yq
 
       - name: Load project config
         id: config
@@ -100,14 +96,13 @@ jobs:
 
       - name: Copy selected KiBot outputs
         run: |
-          set -e
           mkdir -p docs
           for f in Schematic.pdf PCB.pdf kibot.log; do
             SRC=$(find _downloads -type f -name "$f" | head -n1 || true)
             if [ -n "$SRC" ]; then
               cp "$SRC" docs/
             else
-              echo "Warning: $f not found in downloaded artifact"
+              echo "Warning: $f not found"
             fi
           done
 
