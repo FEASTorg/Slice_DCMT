@@ -119,7 +119,14 @@ jobs:
         run: |
           export DATE=$(date '+%Y-%m-%d')
           export PROJECT_NAME="${{ steps.config.outputs.project_name }}"
-          export LINKS="$(IFS=','; for f in ${{ steps.config.outputs.artifacts }}; do echo "- [$f](./$f)"; done)"
+
+          LINKS=""
+          IFS=',' read -ra FILES <<< "${{ steps.config.outputs.artifacts }}"
+          for f in "${FILES[@]}"; do
+            LINKS+="- [$f](./$f)\n"
+          done
+
+          export LINKS
 
           envsubst < docs/index_template.md > docs/index.md
 
