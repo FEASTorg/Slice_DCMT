@@ -19,6 +19,8 @@ kramdown:
 exclude:
   - TODO.md
   - .indexignore
+  - kibot/index_template.md
+  - site_config.yml
 
 # automatically apply layout: page to all docs/*.md
 defaults:
