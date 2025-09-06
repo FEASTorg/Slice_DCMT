@@ -3,15 +3,13 @@ name: KiBot CI/CD
 on:
   push:
     paths:
-      - "hardware/BREAD_Slice.kicad_sch"
-      - "hardware/BREAD_Slice.kicad_pcb"
+      - "hardware/"
       - "config.kibot.yaml"
       - "Makefile"
       - ".github/workflows/kibot-run.yml"
   pull_request:
     paths:
-      - "hardware/BREAD_Slice.kicad_sch"
-      - "hardware/BREAD_Slice.kicad_pcb"
+      - "hardware/"
       - "config.kibot.yaml"
       - "Makefile"
       - ".github/workflows/kibot-run.yml"
