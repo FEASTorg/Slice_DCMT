@@ -1,0 +1,47 @@
+name: Generate KiBot index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/site_config.yml"
+      - "docs/kibot/**"
+      - "scripts/gen_kibot_index.py"
+      - ".github/workflows/generate-kibot-index.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  generate-kibot-index:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install markdown2 pyyaml
+
+      - name: Generate docs/kibot/index.md
+        run: |
+          python scripts/gen_kibot_index.py \
+            --config docs/site_config.yml \
+            --template docs/kibot/index.md \
+            --out-md docs/kibot/index.md
+
+      - name: Commit & push
+        run: |
+          git config user.name "bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add docs/kibot/index.md
+          if ! git diff --cached --quiet; then
+            git commit -m "📄 Auto-generate KiBot index page"
+            git push origin HEAD:main
+          else
+            echo "✅ KiBot index is already up to date."

@@ -1,18 +1,5 @@
-# SLICE_DCMT
+# Slice DCMT Documentation
 
-This is the docs for DCMT slice!
+Welcome to the Slice DCMT project documentation.
 
-```yml
-project_name: "Slice DCMT"
-output_dir: "Generated"
-artifacts:
-  - Schematic.pdf
-  - PCB.pdf
-  - kibot.log
-    - BoM
-    - Drill
-    - Gerbers
-    - Position
-    - Render_3D
-    - index.html
-```
+- [View KiBot Output Index](./kibot_index.html)
