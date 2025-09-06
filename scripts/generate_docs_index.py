@@ -3,8 +3,8 @@ from pathlib import Path
 import fnmatch
 
 
-def load_ignore(dir_path: Path):
-    ignore_file = dir_path / ".indexignore"
+def load_ignore(base_dir: Path):
+    ignore_file = base_dir / ".indexignore"
     patterns = []
     if ignore_file.exists():
         for line in ignore_file.read_text().splitlines():
@@ -16,18 +16,22 @@ def load_ignore(dir_path: Path):
     return patterns
 
 
-def should_ignore(path: Path, patterns):
-    return any(fnmatch.fnmatch(path.name, pat) for pat in patterns)
+def should_ignore(path: Path, patterns, base: Path):
+    rel_path = path.relative_to(base).as_posix()
+    return any(
+        fnmatch.fnmatch(path.name, pat) or fnmatch.fnmatch(rel_path, pat)
+        for pat in patterns
+    )
 
 
-def make_index(dir_path: Path):
-    patterns = load_ignore(dir_path)
+def make_index(dir_path: Path, base_dir: Path):
+    patterns = load_ignore(base_dir)
     readme = dir_path / "README.md"
     index = dir_path / "index.md"
     parts = []
 
     # 1) README or fallback title
-    if readme.exists() and not should_ignore(readme, patterns):
+    if readme.exists() and not should_ignore(readme, patterns, base_dir):
         parts.append(readme.read_text(encoding="utf-8"))
         parts.append("\n")
     else:
@@ -38,7 +42,10 @@ def make_index(dir_path: Path):
 
     # 2) List markdown files
     for md in sorted(dir_path.glob("*.md")):
-        if should_ignore(md, patterns) or md.name.lower() in ("readme.md", "index.md"):
+        if should_ignore(md, patterns, base_dir) or md.name.lower() in (
+            "readme.md",
+            "index.md",
+        ):
             continue
         title = md.stem.replace("_", " ").title()
         parts.append(f"- [{title}]({md.name})\n")
@@ -46,9 +53,9 @@ def make_index(dir_path: Path):
 
     # 3) Recurse into subdirectories
     for sub in sorted([d for d in dir_path.iterdir() if d.is_dir()]):
-        if should_ignore(sub, patterns):
+        if should_ignore(sub, patterns, base_dir):
             continue
-        make_index(sub)
+        make_index(sub, base_dir)
         title = sub.name.replace("_", " ").title()
         parts.append(f"### [{title}]({sub.name}/index.html)\n")
 
@@ -57,4 +64,4 @@ def make_index(dir_path: Path):
 
 
 if __name__ == "__main__":
-    make_index(Path("docs"))
+    make_index(Path("docs"), Path("docs"))
