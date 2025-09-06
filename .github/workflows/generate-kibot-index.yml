@@ -3,8 +3,7 @@ name: Generate KiBot index
 on:
   workflow_run:
     workflows: ["Auto-generate docs index for SLICE"]
-    types:
-      - completed
+    types: [completed]
 
 permissions:
   contents: write
@@ -20,7 +19,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Sync to latest main
+        run: |
+          git fetch origin main
+          git checkout -B main origin/main
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -36,16 +43,16 @@ jobs:
             --config docs/site_config.yml \
             --template docs/kibot/index_template.md \
             --out-md docs/kibot/index.md
-            
-      - name: Commit & push
+
+      - name: Commit & push (with rebase retry)
         run: |
+          set -e
           git config user.name "bot"
           git config user.email "bot@users.noreply.github.com"
           git add docs/kibot/index.md
-          git pull --rebase origin main
           if ! git diff --cached --quiet; then
             git commit -m "📄 Auto-generate KiBot index page"
-            git push origin HEAD:main
+            git push origin HEAD:main || (git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main)
           else
             echo "✅ KiBot index is already up to date."
           fi
