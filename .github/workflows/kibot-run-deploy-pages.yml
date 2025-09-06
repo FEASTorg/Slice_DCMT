@@ -1,4 +1,4 @@
-name: KiBot CI/CD
+name: KiBot CI/CD + Deploy to GitHub Pages
 
 permissions:
   contents: read
@@ -21,9 +21,6 @@ on:
       - "docs/**"
   schedule:
     - cron: "43 5 * * 3"
-
-env:
-  OUT_DIR: Generated
 
 jobs:
   ERC:
@@ -53,41 +50,82 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Install yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yq
+
+      - name: Load project config
+        id: config
+        run: |
+          OUT_DIR=$(yq '.output_dir' docs/site_config.yml)
+          echo "out_dir=$OUT_DIR" >> $GITHUB_OUTPUT
+
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
       - name: Generate PCB Fab Files
         run: make -C hardware/ pcb_fab
+
       - name: Upload KiBot Outputs
         uses: actions/upload-artifact@v4
         with:
           name: kibot-site
-          path: hardware/${{ env.OUT_DIR }}
+          path: hardware/${{ steps.config.outputs.out_dir }}
 
   pages:
     needs: Fab
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yq
+
+      - name: Load project config
+        id: config
+        run: |
+          PROJECT_NAME=$(yq '.project_name' docs/site_config.yml)
+          OUT_DIR=$(yq '.output_dir' docs/site_config.yml)
+          echo "project_name=$PROJECT_NAME" >> $GITHUB_OUTPUT
+          echo "out_dir=$OUT_DIR" >> $GITHUB_OUTPUT
+
       - name: Download KiBot artifacts
         uses: actions/download-artifact@v5
         with:
           name: kibot-site
           path: _downloads
-      - name: Print downloaded files
-        run: ls -R _downloads
-      - name: Build simple site
+
+      - name: Copy selected KiBot outputs
         run: |
-          mkdir -p site
-          cp -r _downloads/* site/
-          echo "<!DOCTYPE html><html><body><h1>KiBot Outputs</h1><ul>" > site/index.html
-          for f in $(ls site); do
-            echo "<li><a href=\"$f\">$f</a></li>" >> site/index.html
+          mkdir -p docs
+          cp _downloads/Schematic.pdf docs/
+          cp _downloads/PCB.pdf docs/
+          cp _downloads/kibot.log docs/
+
+      - name: Generate index.md from template
+        run: |
+          DATE=$(date '+%Y-%m-%d')
+          PROJECT_NAME="${{ steps.config.outputs.project_name }}"
+          ARTIFACTS=$(yq '.artifacts[]' docs/site_config.yml)
+
+          LINKS=""
+          for f in $ARTIFACTS; do
+            LINKS="$LINKS- [$f](./$f)\n"
           done
-          echo "</ul></body></html>" >> site/index.html
-      - name: Upload Pages Artifact
+
+          cat docs/index_template.md \
+            | sed "s|{{project_name}}|$PROJECT_NAME|g" \
+            | sed "s|{{date}}|$DATE|g" \
+            | sed "s|{{output_links}}|$LINKS|g" \
+            > docs/index.md
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: site/
+          path: docs/
 
   deploy:
     needs: pages

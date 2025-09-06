@@ -1,0 +1,6 @@
+project_name: "Slice DCMT"
+output_dir: "Generated"
+artifacts:
+  - Schematic.pdf
+  - PCB.pdf
+  - kibot.log
