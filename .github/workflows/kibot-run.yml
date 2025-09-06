@@ -34,12 +34,6 @@ jobs:
           ls -la hardware/
           make -C hardware/ erc
 
-      - name: Upload ERC Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: ERC_Output
-          path: hardware/${{ env.OUT_DIR }}
-
   DRC:
     runs-on: ubuntu-latest
     container: ghcr.io/inti-cmnb/kicad9_auto:latest
@@ -52,46 +46,21 @@ jobs:
       - name: Run DRC
         run: make -C hardware/ drc
 
-      - name: Upload DRC Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: DRC_Output
-          path: hardware/${{ env.OUT_DIR }}
-
-  FabSch:
-    name: Schematic Fabrication files
-    runs-on: ubuntu-latest
-    container: ghcr.io/inti-cmnb/kicad9_auto:latest
-    needs: ERC
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Generate Schematic Fab Files
-        run: make -C hardware/ sch_fab
-
-      - name: Upload Schematic Fab Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: FabSch_Output
-          path: hardware/${{ env.OUT_DIR }}
-
-  FabPCB:
-    name: PCB Fabrication files
+  Fab:
+    name: Generate All Fabrication Outputs
     runs-on: ubuntu-latest
     container: ghcr.io/inti-cmnb/kicad9_auto_full:latest
-    needs: DRC
+    needs: [DRC, ERC]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-
+      - name: Generate SCH files
+        run: make -C hardware/ sch_fab
       - name: Generate PCB Fab Files
         run: make -C hardware/ pcb_fab
-
-      - name: Upload PCB Fab Results
+      - name: Upload all KiBot output
         uses: actions/upload-artifact@v4
         with:
-          name: FabPCB_Output
+          name: kibot-site
           path: hardware/${{ env.OUT_DIR }}

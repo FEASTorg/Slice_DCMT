@@ -21,6 +21,8 @@ jobs:
       - name: Download KiBot artifacts
         uses: actions/download-artifact@v5
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: kibot-site
           path: _downloads
 
       - name: Build simple site
