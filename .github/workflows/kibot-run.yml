@@ -1,5 +1,9 @@
 name: KiBot CI/CD
 
+permissions:
+  contents: read
+  actions: write
+
 on:
   push:
     paths:
@@ -42,7 +46,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-
+          
       - name: Run DRC
         run: make -C hardware/ drc
 

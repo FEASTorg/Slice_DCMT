@@ -14,6 +14,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -24,6 +25,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           name: kibot-site
           path: _downloads
+
+      - name: Debug downloaded files
+        run: ls -R _downloads
 
       - name: Build simple site
         run: |
