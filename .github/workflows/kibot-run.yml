@@ -41,12 +41,11 @@ jobs:
   DRC:
     runs-on: ubuntu-latest
     container: ghcr.io/inti-cmnb/kicad9_auto:latest
-    needs: ERC
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          
+
       - name: Run DRC
         run: make -C hardware/ drc
 
@@ -54,15 +53,17 @@ jobs:
     name: Generate All Fabrication Outputs
     runs-on: ubuntu-latest
     container: ghcr.io/inti-cmnb/kicad9_auto_full:latest
-    needs: [DRC, ERC]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
+
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
+
       - name: Generate PCB Fab Files
         run: make -C hardware/ pcb_fab
+
       - name: Upload all KiBot output
         uses: actions/upload-artifact@v4
         with:
