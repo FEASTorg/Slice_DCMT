@@ -59,8 +59,17 @@ jobs:
           # ensure static hosting (no Jekyll processing)
           touch docs/.nojekyll
 
-      - name: Generate index.md and index.html using script
-        run: python3 scripts/gen_kibot_index.py --html --template docs/index_template.md --out-md docs/index.md --out-html docs/index.html --project "$PROJECT_NAME" --artifacts $(printf '%s,' "${{ steps.cfg.outputs.artifacts }}")
+      - name: Generate index using script
+        run: |
+          PROJECT_NAME="${{ steps.cfg.outputs.project_name }}"
+          ARTIFACTS="$(printf '%s,' "${{ steps.cfg.outputs.artifacts }}")"
+          python3 scripts/gen_kibot_index.py \
+          --html \
+          --template docs/index_template.md \
+          --out-md docs/index.md \
+          --out-html docs/index.html \
+          --project "$PROJECT_NAME" \
+          --artifacts "$ARTIFACTS"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4

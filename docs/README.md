@@ -1,6 +1,6 @@
-# Docs
+# SLICE_DCMT
 
-This is the docs!
+This is the docs for DCMT slice!
 
 ```yml
 project_name: "Slice DCMT"

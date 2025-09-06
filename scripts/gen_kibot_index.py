@@ -1,68 +1,83 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-import yaml
 import argparse
 from datetime import datetime
 from pathlib import Path
-
-try:
-    import markdown2
-except ImportError:
-    markdown2 = None
+import sys
+import yaml
+import markdown2
 
 
-def load_config(config_file: Path):
+def load_config(config_file: Path) -> dict:
     with config_file.open("r") as f:
         return yaml.safe_load(f)
 
 
-def generate_markdown(project_name: str, artifacts: list[str], timestamp: str) -> str:
-    lines = [
-        f"# Docs & KiBot Outputs for {project_name}",
-        "",
-        "The following files were generated from the latest PCB build:",
-        "",
-    ]
-    for artifact in artifacts:
-        lines.append(f"- [{artifact}](./{artifact})")
-    lines.append("")
-    lines.append(f"_Last updated automatically on {timestamp} by GitHub Actions._")
-    lines.append("")
-    return "\n".join(lines)
+def render_template(
+    template: str, project: str, artifacts: list[str], timestamp: str
+) -> str:
+    lines = []
+    for a in artifacts:
+        a = a.strip()
+        if a:
+            lines.append(f"- [{a}](./{a})")
+    links_block = "\n".join(lines)
+
+    return (
+        template.replace("$PROJECT_NAME", project)
+        .replace("$LINKS", links_block)
+        .replace("$DATE", timestamp)
+    )
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate index.md and index.html from KiBot config."
+        description="Generate index.md and index.html for KiBot outputs"
     )
+    parser.add_argument("-c", "--config", type=Path, help="Path to site_config.yml")
+    parser.add_argument("--project", type=str, help="Override project name")
     parser.add_argument(
-        "-c", "--config", type=Path, default=Path("docs/site_config.yml")
+        "--artifacts", type=str, help="Comma-separated list of artifacts"
     )
-    parser.add_argument("-o", "--output-dir", type=Path, default=Path("docs"))
-    parser.add_argument(
-        "--html", action="store_true", help="Also generate index.html using markdown2"
-    )
-
+    parser.add_argument("--template", type=Path, default=Path("docs/index_template.md"))
+    parser.add_argument("--out-md", type=Path, default=Path("docs/index.md"))
+    parser.add_argument("--out-html", type=Path, default=Path("docs/index.html"))
+    parser.add_argument("--html", action="store_true", help="Also generate index.html")
     args = parser.parse_args()
-    cfg = load_config(args.config)
 
+    # Load config unless everything is overridden
+    project = args.project
+    artifacts = []
+    if args.artifacts:
+        artifacts = [a.strip() for a in args.artifacts.split(",") if a.strip()]
+    elif args.config:
+        cfg = load_config(args.config)
+        project = project or cfg["project_name"]
+        artifacts = artifacts or cfg["artifacts"]
+    else:
+        print(
+            "❌ Either --config or both --project and --artifacts must be provided.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # Prepare timestamp and read template
     timestamp = datetime.now().strftime("%Y-%m-%d at %H:%M:%S %Z")
-    md = generate_markdown(cfg["project_name"], cfg["artifacts"], timestamp)
+    template_str = args.template.read_text(encoding="utf-8")
 
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "index.md").write_text(md, encoding="utf-8")
-
-    print("✔ index.md generated.")
+    # Generate and write index.md
+    index_md = render_template(template_str, project, artifacts, timestamp)
+    args.out_md.parent.mkdir(parents=True, exist_ok=True)
+    args.out_md.write_text(index_md, encoding="utf-8")
+    print(f"✔ Wrote {args.out_md}")
 
     if args.html:
         if markdown2:
-            html = markdown2.markdown(md)
-            (args.output_dir / "index.html").write_text(html, encoding="utf-8")
-            print("✔ index.html generated.")
+            html = markdown2.markdown(index_md)
+            args.out_html.write_text(html, encoding="utf-8")
+            print(f"✔ Wrote {args.out_html}")
         else:
-            print("⚠ markdown2 not installed; skipping HTML generation.")
+            print("⚠ markdown2 not installed, skipping HTML")
 
 
 if __name__ == "__main__":
