@@ -26,7 +26,7 @@ jobs:
           name: kibot-site
           path: _downloads
 
-      - name: Debug downloaded files
+      - name: Print downloaded files for debugging
         run: ls -R _downloads
 
       - name: Build simple site
