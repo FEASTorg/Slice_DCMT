@@ -1,9 +1,6 @@
-# Docs & KiBot Outputs for Slice DCMT
+# Kibot
 
-The following files were generated from the latest PCB build:
+## Contents
 
-- [Schematic.pdf](./Schematic.pdf)
-- [PCB.pdf](./PCB.pdf)
-- [kibot.log](./kibot.log)
+- [Index Template](index_template.md)
 
-_Last updated automatically on 2025-09-06 at 20:08:29  by GitHub Actions._
