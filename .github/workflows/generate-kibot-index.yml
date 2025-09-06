@@ -6,6 +6,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: gen-kibot-index
+  cancel-in-progress: true
+
 jobs:
   generate-kibot-index:
     runs-on: ubuntu-latest
@@ -14,13 +18,38 @@ jobs:
         with:
           persist-credentials: true
           fetch-depth: 0
+
+      - name: Sync to latest main
+        run: |
+          git fetch origin main
+          git checkout -B main origin/main
+
       - uses: actions/setup-python@v4
         with: { python-version: "3.x" }
+
       - name: Install deps
         run: pip install markdown2 pyyaml
+
       - name: Generate docs/kibot/index.md
         run: |
           python scripts/gen_kibot_index.py \
             --config docs/site_config.yml \
             --template docs/kibot/index_template.md \
             --out-md docs/kibot/index.md
+
+      - name: Commit & push (safe rebase)
+        run: |
+          set -e
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+
+          git add docs/kibot/index.md
+          if git diff --cached --quiet; then
+            echo "✅ KiBot index is already up to date."
+            exit 0
+          fi
+
+          git commit -m "📄 Auto-generate KiBot index page"
+          git fetch origin main
+          git pull --rebase origin main
+          git push origin HEAD:main
