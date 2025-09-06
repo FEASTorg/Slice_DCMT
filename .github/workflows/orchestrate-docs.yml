@@ -32,3 +32,4 @@ jobs:
     needs: [gen-kibot-index]
     with:
       kibot_run_id: ${{ needs.kibot.outputs.kibot_run_id }}
+      commit_sha: ${{ needs.gen-kibot-index.outputs.kibot_index_sha }}

@@ -2,6 +2,10 @@ name: Generate KiBot index
 
 on:
   workflow_call:
+    outputs:
+      kibot_index_sha:
+        description: "Commit SHA containing the latest KiBot index"
+        value: ${{ jobs.generate-kibot-index.outputs.commit_sha }}
 
 permissions:
   contents: write
@@ -13,6 +17,8 @@ concurrency:
 jobs:
   generate-kibot-index:
     runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.record-sha.outputs.commit_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,13 +49,16 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
 
-          git add docs/kibot/index.md
-          if git diff --cached --quiet; then
+          if ! git diff --quiet -- docs/kibot/index.md; then
+            git add docs/kibot/index.md
+            git commit -m "📄 Auto-generate KiBot index page"
+            git fetch origin main
+            git pull --rebase origin main
+            git push origin HEAD:main
+          else
             echo "✅ KiBot index is already up to date."
-            exit 0
           fi
 
-          git commit -m "📄 Auto-generate KiBot index page"
-          git fetch origin main
-          git pull --rebase origin main
-          git push origin HEAD:main
+      - name: Record SHA
+        id: record-sha
+        run: echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
