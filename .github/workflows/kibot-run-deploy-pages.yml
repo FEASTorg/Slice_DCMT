@@ -76,7 +76,6 @@ jobs:
   pages:
     needs: Fab
     runs-on: ubuntu-latest
-    container: mikefarah/yq:latest
     steps:
       - uses: actions/checkout@v4
 
