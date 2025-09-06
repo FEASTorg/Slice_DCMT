@@ -3,6 +3,8 @@ name: KiBot CI/CD
 permissions:
   contents: read
   actions: write
+  pages: write
+  id-token: write
 
 on:
   push:
@@ -18,7 +20,6 @@ on:
       - ".github/workflows/**"
       - "docs/**"
   schedule:
-    # Run at 05:43 UTC every Wednesday
     - cron: "43 5 * * 3"
 
 env:
@@ -32,11 +33,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-
       - name: Run ERC
-        run: |
-          ls -la hardware/
-          make -C hardware/ erc
+        run: make -C hardware/ erc
 
   DRC:
     runs-on: ubuntu-latest
@@ -45,27 +43,58 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-
       - name: Run DRC
         run: make -C hardware/ drc
 
   Fab:
-    name: Generate All Fabrication Outputs
     runs-on: ubuntu-latest
     container: ghcr.io/inti-cmnb/kicad9_auto_full:latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
-
       - name: Generate PCB Fab Files
         run: make -C hardware/ pcb_fab
-
-      - name: Upload all KiBot output
+      - name: Upload KiBot Outputs
         uses: actions/upload-artifact@v4
         with:
           name: kibot-site
           path: hardware/${{ env.OUT_DIR }}
+
+  pages:
+    needs: Fab
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download KiBot artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: kibot-site
+          path: _downloads
+      - name: Print downloaded files
+        run: ls -R _downloads
+      - name: Build simple site
+        run: |
+          mkdir -p site
+          cp -r _downloads/* site/
+          echo "<!DOCTYPE html><html><body><h1>KiBot Outputs</h1><ul>" > site/index.html
+          for f in $(ls site); do
+            echo "<li><a href=\"$f\">$f</a></li>" >> site/index.html
+          done
+          echo "</ul></body></html>" >> site/index.html
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/
+
+  deploy:
+    needs: pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
