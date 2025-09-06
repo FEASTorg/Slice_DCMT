@@ -2,7 +2,9 @@ name: Generate KiBot index
 
 on:
   workflow_run:
-    workflows: ["Auto-generate docs index for SLICE"]
+    workflows:
+      - "Auto-generate docs index for SLICE"
+      - "KiBot CI/CD"
     types: [completed]
 
 permissions:
@@ -14,7 +16,7 @@ concurrency:
 
 jobs:
   generate-kibot-index:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.name == 'Auto-generate docs index for SLICE'
     runs-on: ubuntu-latest
 
     steps:
