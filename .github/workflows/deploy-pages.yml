@@ -39,7 +39,7 @@ jobs:
       - name: Load artifact list
         id: cfg
         run: |
-          ARTS=$(yq -r '.artifacts[]' docs/site_config.yml || true)
+          ARTS=$(yq -r '.artifacts[]' docs/kibot/config.kibot.site.yml || true)
           echo "artifacts<<EOF" >> "$GITHUB_OUTPUT"
           echo "$ARTS" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"

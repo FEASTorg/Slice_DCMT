@@ -8,7 +8,7 @@ on:
         value: ${{ jobs.meta.outputs.run_id }}
 
 env:
-  CONFIG_FILE: docs/site_config.yml
+  CONFIG_FILE: docs/kibot/config.kibot.site.yml
 
 permissions:
   contents: read

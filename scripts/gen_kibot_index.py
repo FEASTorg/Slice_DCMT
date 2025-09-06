@@ -34,7 +34,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Generate index.md and index.html for KiBot outputs"
     )
-    parser.add_argument("-c", "--config", type=Path, help="Path to site_config.yml")
+    parser.add_argument("-c", "--config", type=Path, help="Path to config.kibot.site.yml")
     parser.add_argument("--project", type=str, help="Override project name")
     parser.add_argument(
         "--artifacts", type=str, help="Comma-separated list of artifacts"
