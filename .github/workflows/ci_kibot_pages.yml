@@ -115,20 +115,24 @@ jobs:
             fi
           done
 
-      - name: Generate index.md from template
+      - name: Generate index.md with correct line breaks
         run: |
-          export DATE=$(date '+%Y-%m-%d')
-          export PROJECT_NAME="${{ steps.config.outputs.project_name }}"
+          DATE=$(date '+%Y-%m-%d')
+          PROJECT_NAME="${{ steps.config.outputs.project_name }}"
 
-          LINKS=""
           IFS=',' read -ra FILES <<< "${{ steps.config.outputs.artifacts }}"
-          for f in "${FILES[@]}"; do
-            LINKS+="- [$f](./$f)\n\n"
-          done
 
-          export LINKS
-
-          envsubst < docs/index_template.md > docs/index.md
+          {
+            echo "# Docs & KiBot Outputs for $PROJECT_NAME"
+            echo
+            echo "The following files were generated from the latest PCB build:"
+            echo
+            for f in "${FILES[@]}"; do
+              echo "- [$f](./$f)"
+            done
+            echo
+            echo "_Last updated automatically on $DATE by GitHub Actions._"
+          } > docs/index.md
 
       - name: Convert index.md → index.html
         run: |
