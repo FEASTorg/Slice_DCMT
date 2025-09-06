@@ -66,14 +66,13 @@ jobs:
       - name: Generate index using script
         run: |
           PROJECT_NAME="${{ steps.cfg.outputs.project_name }}"
-          ARTIFACTS="$(printf '%s,' "${{ steps.cfg.outputs.artifacts }}")"
           python3 scripts/gen_kibot_index.py \
-          --html \
-          --template docs/index_template.md \
-          --out-md docs/index.md \
-          --out-html docs/index.html \
-          --project "$PROJECT_NAME" \
-          --artifacts "$ARTIFACTS"
+            --html \
+            --template docs/index_template.md \
+            --out-md docs/index.md \
+            --out-html docs/index.html \
+            --project "$PROJECT_NAME" \
+            --artifacts $(cat artifacts.txt | paste -sd "," -)
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
