@@ -61,19 +61,19 @@ jobs:
 
       - name: Generate index.md
         run: |
-          DATE=$(date '+%Y-%m-%d')
+          TIMESTAMP=$(date '+%Y-%m-%d at %H:%M:%S %Z')
           PROJECT_NAME="${{ steps.cfg.outputs.project_name }}"
           {
-            echo "# Docs & KiBot Outputs for $PROJECT_NAME"
-            echo
-            echo "The following files were generated from the latest PCB build:"
-            echo
-            printf '%s\n' "${{ steps.cfg.outputs.artifacts }}" | while IFS= read -r f; do
+          echo "# Docs & KiBot Outputs for $PROJECT_NAME"
+          echo
+          echo "The following files were generated from the latest PCB build:"
+          echo
+          printf '%s\n' "${{ steps.cfg.outputs.artifacts }}" | while IFS= read -r f; do
               [ -z "$f" ] && continue
               echo "- [$f](./$f)"
-            done
-            echo
-            echo "_Last updated automatically on $DATE by GitHub Actions._"
+          done
+          echo
+          echo "_Last updated automatically on $TIMESTAMP by GitHub Actions._"
           } > docs/index.md
 
       - name: Convert index.md → index.html
