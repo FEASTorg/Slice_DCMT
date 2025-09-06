@@ -6,4 +6,4 @@ Welcome to the Slice DCMT project documentation.
 
 - [Components Sourcing](components_sourcing.md)
 
-### [Kibot](kibot/index.html)
+### [Kibot](kibot)
