@@ -59,25 +59,8 @@ jobs:
           # ensure static hosting (no Jekyll processing)
           touch docs/.nojekyll
 
-      - name: Generate index.md
-        run: |
-          TIMESTAMP=$(date '+%Y-%m-%d at %H:%M:%S %Z')
-          PROJECT_NAME="${{ steps.cfg.outputs.project_name }}"
-          {
-          echo "# Docs & KiBot Outputs for $PROJECT_NAME"
-          echo
-          echo "The following files were generated from the latest PCB build:"
-          echo
-          printf '%s\n' "${{ steps.cfg.outputs.artifacts }}" | while IFS= read -r f; do
-              [ -z "$f" ] && continue
-              echo "- [$f](./$f)"
-          done
-          echo
-          echo "_Last updated automatically on $TIMESTAMP by GitHub Actions._"
-          } > docs/index.md
-
-      - name: Convert index.md → index.html
-        run: pandoc docs/index.md -f markdown -t html -s -o docs/index.html
+      - name: Generate index.md and index.html using script
+        run: python3 scripts/gen_kibot_index.py --html --template docs/index_template.md --out-md docs/index.md --out-html docs/index.html --project "$PROJECT_NAME" --artifacts $(printf '%s,' "${{ steps.cfg.outputs.artifacts }}")
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
