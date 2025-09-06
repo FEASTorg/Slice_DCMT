@@ -6,10 +6,6 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: gen-main-index
-  cancel-in-progress: true
-
 jobs:
   build-index:
     runs-on: ubuntu-latest
@@ -19,7 +15,6 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      # Always start from the latest remote main (clean tree)
       - name: Sync to latest main
         run: |
           git fetch origin main
@@ -31,20 +26,15 @@ jobs:
       - name: Generate all docs/index.md
         run: python scripts/generate_docs_index.py
 
-      - name: Commit & push (safe rebase)
+      - name: Commit & push (rebase if needed)
         run: |
           set -e
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-
-          git add docs/index.md
-          if git diff --cached --quiet; then
-            echo "✅ No changes to commit."
-            exit 0
+          git config user.name "bot"
+          git config user.email "bot@users.noreply.github.com"
+          if ! git diff --quiet -- docs; then
+            git add docs
+            git commit -m "🔁 Auto-generate docs index"
+            git push origin HEAD:main || (git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main)
+          else
+            echo "✅ Indexes up to date"
           fi
-
-          git commit -m "🔁 Auto-generate docs index"
-          # Rebase our new commit onto latest remote (handles races)
-          git fetch origin main
-          git pull --rebase origin main
-          git push origin HEAD:main
