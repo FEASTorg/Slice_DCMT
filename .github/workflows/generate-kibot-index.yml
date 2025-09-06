@@ -36,16 +36,16 @@ jobs:
             --config docs/site_config.yml \
             --template docs/kibot/index_template.md \
             --out-md docs/kibot/index.md
-
+            
       - name: Commit & push
         run: |
           git config user.name "bot"
           git config user.email "bot@users.noreply.github.com"
-          git pull --rebase origin main
           git add docs/kibot/index.md
+          git pull --rebase origin main
           if ! git diff --cached --quiet; then
             git commit -m "📄 Auto-generate KiBot index page"
             git push origin HEAD:main
           else
             echo "✅ KiBot index is already up to date."
-            fi
+          fi
