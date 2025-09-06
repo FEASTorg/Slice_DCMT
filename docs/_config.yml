@@ -4,10 +4,12 @@ description: >
 baseurl: "/SLICE_DCMT"
 url: "https://feastorg.github.io"
 
-theme: minima
+remote_theme: jekyll/minima
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
+  - jekyll-remote-theme
 
 markdown: kramdown
 kramdown:
