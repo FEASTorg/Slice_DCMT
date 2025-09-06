@@ -1,19 +1,21 @@
 name: Generate KiBot index
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "docs/site_config.yml"
-      - "docs/kibot/**"
-      - "scripts/gen_kibot_index.py"
-      - ".github/workflows/generate-kibot-index.yml"
+  workflow_run:
+    workflows: ["Auto-generate docs index for SLICE"]
+    types:
+      - completed
 
 permissions:
   contents: write
 
+concurrency:
+  group: generate-kibot-index
+  cancel-in-progress: true
+
 jobs:
   generate-kibot-index:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -39,10 +41,11 @@ jobs:
         run: |
           git config user.name "bot"
           git config user.email "bot@users.noreply.github.com"
+          git pull --rebase origin main
           git add docs/kibot/index.md
           if ! git diff --cached --quiet; then
             git commit -m "📄 Auto-generate KiBot index page"
             git push origin HEAD:main
           else
             echo "✅ KiBot index is already up to date."
-          fi
+            fi
