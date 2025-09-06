@@ -1,7 +1,5 @@
-# Docs & KiBot Outputs for $PROJECT_NAME
+# Kibot
 
-The following files were generated from the latest PCB build:
+## Contents
 
-$LINKS
 
-_Last updated automatically on $DATE by GitHub Actions._
