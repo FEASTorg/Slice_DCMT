@@ -25,6 +25,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y yq pandoc
 
+      - name: Install Python dependencies
+        run: |
+          pip install markdown2
+
       - name: Load project config
         id: cfg
         run: |

@@ -72,12 +72,9 @@ def main():
     print(f"✔ Wrote {args.out_md}")
 
     if args.html:
-        if markdown2:
-            html = markdown2.markdown(index_md)
-            args.out_html.write_text(html, encoding="utf-8")
-            print(f"✔ Wrote {args.out_html}")
-        else:
-            print("⚠ markdown2 not installed, skipping HTML")
+        html = markdown2.markdown(index_md)
+        args.out_html.write_text(html, encoding="utf-8")
+        print(f"✔ Wrote {args.out_html}")
 
 
 if __name__ == "__main__":
