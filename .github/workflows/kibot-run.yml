@@ -3,16 +3,16 @@ name: KiBot CI/CD
 on:
   push:
     paths:
+      - "_config.yml"
       - "hardware/**"
-      - "config.kibot.yaml"
-      - "Makefile"
-      - ".github/workflows/kibot-run.yml"
+      - ".github/workflows/**"
+      - "docs/**"
   pull_request:
     paths:
+      - "_config.yml"
       - "hardware/**"
-      - "config.kibot.yaml"
-      - "Makefile"
-      - ".github/workflows/kibot-run.yml"
+      - ".github/workflows/**"
+      - "docs/**"
   schedule:
     # Run at 05:43 UTC every Wednesday
     - cron: "43 5 * * 3"
