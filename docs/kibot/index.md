@@ -1,5 +1,0 @@
-# Kibot
-
-## Contents
-
-

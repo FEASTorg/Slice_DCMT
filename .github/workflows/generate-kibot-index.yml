@@ -32,7 +32,7 @@ jobs:
         run: |
           python scripts/gen_kibot_index.py \
             --config docs/site_config.yml \
-            --template docs/kibot/index.md \
+            --template docs/kibot/index_template.md \
             --out-md docs/kibot/index.md
 
       - name: Commit & push
@@ -45,3 +45,4 @@ jobs:
             git push origin HEAD:main
           else
             echo "✅ KiBot index is already up to date."
+          fi
