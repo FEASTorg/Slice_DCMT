@@ -2,4 +2,4 @@
 
 Welcome to the Slice DCMT project documentation.
 
-- [View the latest KiBot Outputs »](./kibot_index/)
+- [View KiBot Output Index](./kibot_index.html)
