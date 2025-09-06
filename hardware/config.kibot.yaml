@@ -100,10 +100,10 @@ outputs:
     layers:
       - layer: F.Cu
         suffix: F_Cu
-      - layer: In1.Cu
-        suffix: In1_Cu
-      - layer: In2.Cu
-        suffix: In2_Cu
+      # - layer: In1.Cu
+      #   suffix: In1_Cu
+      # - layer: In2.Cu
+      #   suffix: In2_Cu
       - layer: B.Cu
         suffix: B_Cu
       - layer: F.Paste
