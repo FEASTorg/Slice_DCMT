@@ -6,4 +6,4 @@ The following files were generated from the latest PCB build:
 
 $LINKS
 
-_Last updated automatically on $DATE by GitHub Actions._
+_Last updated automatically on $DATE by KiBot via GitHub Actions._

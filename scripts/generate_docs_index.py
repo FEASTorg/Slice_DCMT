@@ -57,7 +57,7 @@ def make_index(dir_path: Path, base_dir: Path):
             continue
         make_index(sub, base_dir)
         title = sub.name.replace("_", " ").title()
-        parts.append(f"### [{title}]({sub.name}/index.html)\n")
+        parts.append(f"### [{title}]({sub.name})\n")
 
     index.write_text("".join(parts), encoding="utf-8")
     print(f"Generated {index}")
