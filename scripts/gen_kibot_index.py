@@ -39,9 +39,11 @@ def main():
     parser.add_argument(
         "--artifacts", type=str, help="Comma-separated list of artifacts"
     )
-    parser.add_argument("--template", type=Path, default=Path("docs/index_template.md"))
-    parser.add_argument("--out-md", type=Path, default=Path("docs/index.md"))
-    parser.add_argument("--out-html", type=Path, default=Path("docs/index.html"))
+    parser.add_argument(
+        "--template", type=Path, default=Path("docs/kibot_index_template.md")
+    )
+    parser.add_argument("--out-md", type=Path, default=Path("docs/kibot_index.md"))
+    parser.add_argument("--out-html", type=Path, default=Path("docs/kibot_index.html"))
     parser.add_argument("--html", action="store_true", help="Also generate index.html")
     args = parser.parse_args()
 

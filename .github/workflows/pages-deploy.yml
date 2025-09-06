@@ -68,9 +68,9 @@ jobs:
           PROJECT_NAME="${{ steps.cfg.outputs.project_name }}"
           python3 scripts/gen_kibot_index.py \
             --html \
-            --template docs/index_template.md \
-            --out-md docs/index.md \
-            --out-html docs/index.html \
+            --template docs/kibot_index_template.md \
+            --out-md docs/kibot_index.md \
+            --out-html docs/kibot_index.html \
             --project "$PROJECT_NAME" \
             --artifacts $(cat artifacts.txt | paste -sd "," -)
 
