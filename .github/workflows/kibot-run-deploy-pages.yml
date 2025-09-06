@@ -22,6 +22,9 @@ on:
   schedule:
     - cron: "43 5 * * 3"
 
+env:
+  CONFIG_FILE: docs/site_config.yml
+
 jobs:
   ERC:
     runs-on: ubuntu-latest
@@ -56,14 +59,15 @@ jobs:
           apt-get update
           apt-get install -y yq
 
-      - name: Load project config (OUT_DIR)
+      - name: Load config
         id: config
         run: |
-          OUT_DIR=$(yq -r '.output_dir' docs/site_config.yml)   # -r strips quotes
-          echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
+          OUT_DIR=$(yq -r '.output_dir' "$CONFIG_FILE")
+          echo "out_dir=$OUT_DIR" >> $GITHUB_OUTPUT
 
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
+
       - name: Generate PCB Fab Files
         run: make -C hardware/ pcb_fab
 
@@ -79,13 +83,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
       - name: Load project config
         id: config
         run: |
-          PROJECT_NAME=$(yq -r '.project_name' docs/site_config.yml)
-          OUT_DIR=$(yq -r '.output_dir' docs/site_config.yml)
-          echo "project_name=$PROJECT_NAME" >> "$GITHUB_OUTPUT"
-          echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
+          PROJECT_NAME=$(yq -r '.project_name' "$CONFIG_FILE")
+          OUT_DIR=$(yq -r '.output_dir' "$CONFIG_FILE")
+          ARTIFACTS=$(yq -r '.artifacts[]' "$CONFIG_FILE")
+          echo "project_name=$PROJECT_NAME" >> $GITHUB_OUTPUT
+          echo "out_dir=$OUT_DIR" >> $GITHUB_OUTPUT
+          echo "artifacts<<EOF" >> $GITHUB_OUTPUT
+          echo "$ARTIFACTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Download KiBot artifacts
         uses: actions/download-artifact@v5
@@ -96,7 +109,7 @@ jobs:
       - name: Copy selected KiBot outputs
         run: |
           mkdir -p docs
-          for f in Schematic.pdf PCB.pdf kibot.log; do
+          for f in ${{ steps.config.outputs.artifacts }}; do
             SRC=$(find _downloads -type f -name "$f" | head -n1 || true)
             if [ -n "$SRC" ]; then
               cp "$SRC" docs/
@@ -109,10 +122,14 @@ jobs:
         run: |
           export DATE=$(date '+%Y-%m-%d')
           export PROJECT_NAME="${{ steps.config.outputs.project_name }}"
-          export LINKS="$(printf -- '- [Schematic.pdf](./Schematic.pdf)\n- [PCB.pdf](./PCB.pdf)\n- [kibot.log](./kibot.log)')"
+          export LINKS="$(for f in ${{ steps.config.outputs.artifacts }}; do echo "- [$f](./$f)"; done)"
 
           envsubst < docs/index_template.md > docs/index.md
 
+
+      - name: Convert index.md → index.html
+        run: |
+          pandoc docs/index.md -f markdown -t html -s -o docs/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
