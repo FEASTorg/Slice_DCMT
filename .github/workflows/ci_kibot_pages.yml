@@ -83,22 +83,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pandoc
+      - name: Install yq and pandoc
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc
+          sudo apt-get install -y yq pandoc
 
       - name: Load project config
         id: config
         run: |
-          PROJECT_NAME=$(yq -r '.project_name' "$CONFIG_FILE")
-          OUT_DIR=$(yq -r '.output_dir' "$CONFIG_FILE")
-          ARTIFACTS=$(yq -r '.artifacts[]' "$CONFIG_FILE")
-          echo "project_name=$PROJECT_NAME" >> $GITHUB_OUTPUT
-          echo "out_dir=$OUT_DIR" >> $GITHUB_OUTPUT
-          echo "artifacts<<EOF" >> $GITHUB_OUTPUT
-          echo "$ARTIFACTS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "Loading config from $CONFIG_FILE"
+          echo "project_name=$(yq -r '.project_name' "$CONFIG_FILE")" >> $GITHUB_OUTPUT
+          echo "out_dir=$(yq -r '.output_dir' "$CONFIG_FILE")" >> $GITHUB_OUTPUT
+          echo "artifacts=$(yq -r '.artifacts[]' "$CONFIG_FILE" | paste -sd ',' -)" >> $GITHUB_OUTPUT
 
       - name: Download KiBot artifacts
         uses: actions/download-artifact@v5
@@ -109,7 +105,8 @@ jobs:
       - name: Copy selected KiBot outputs
         run: |
           mkdir -p docs
-          for f in ${{ steps.config.outputs.artifacts }}; do
+          IFS=',' read -ra FILES <<< "${{ steps.config.outputs.artifacts }}"
+          for f in "${FILES[@]}"; do
             SRC=$(find _downloads -type f -name "$f" | head -n1 || true)
             if [ -n "$SRC" ]; then
               cp "$SRC" docs/
@@ -122,10 +119,9 @@ jobs:
         run: |
           export DATE=$(date '+%Y-%m-%d')
           export PROJECT_NAME="${{ steps.config.outputs.project_name }}"
-          export LINKS="$(for f in ${{ steps.config.outputs.artifacts }}; do echo "- [$f](./$f)"; done)"
+          export LINKS="$(IFS=','; for f in ${{ steps.config.outputs.artifacts }}; do echo "- [$f](./$f)"; done)"
 
           envsubst < docs/index_template.md > docs/index.md
-
 
       - name: Convert index.md → index.html
         run: |
