@@ -4,3 +4,6 @@ artifacts:
   - Schematic.pdf
   - PCB.pdf
   - kibot.log
+images:
+  - board_top.png
+  - board_bottom.png

@@ -5,3 +5,11 @@ nav_exclude: true
 ---
 
 Welcome to the Slice DCMT project documentation.
+
+## Board Renders
+
+Top  
+![Board Top]({{ '/assets/boards/board_top.png' | relative_url }})
+
+Bottom  
+![Board Bottom]({{ '/assets/boards/board_bottom.png' | relative_url }})

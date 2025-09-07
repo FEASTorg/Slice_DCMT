@@ -158,3 +158,24 @@ outputs:
       units: millimeters # millimeters or inches
       separate_files_for_front_and_back: true
       only_smd: true
+
+  - name: "board_top_png"
+    comment: "Board render (top)"
+    type: pcbdraw
+    dir: Images
+    options:
+      format: PNG
+      dpi: 300
+      side: front
+      output: "board_top.png"
+
+  - name: "board_bottom_png"
+    comment: "Board render (bottom)"
+    type: pcbdraw
+    dir: Images
+    options:
+      format: PNG
+      dpi: 300
+      side: back
+      mirror: true
+      output: "board_bottom.png"

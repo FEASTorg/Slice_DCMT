@@ -26,6 +26,8 @@ jobs:
   gen-kibot-index:
     uses: ./.github/workflows/generate-kibot-index.yml
     needs: [kibot, gen-main-index]
+    with:
+      kibot_run_id: ${{ needs.kibot.outputs.kibot_run_id }}
 
   deploy-pages:
     uses: ./.github/workflows/deploy-pages.yml
