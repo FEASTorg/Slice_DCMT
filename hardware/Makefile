@@ -9,21 +9,18 @@ EXTRA_OPS=--banner -1 --log $(OUT_DIR)/kibot.log $(DEBUG)
 all: erc_and_fab drc_and_fab
 
 erc:
-	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s drc -i
-
-drc:
 	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s erc -i
 
+drc:
+	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s drc -i
+
 sch_fab:
-	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s erc,drc  print_sch interactive_bom bom_html bom_csv
+	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s erc drc print_sch interactive_bom bom_html bom_csv
 
 pcb_fab:
 	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) \
-	  -s gerbers,excellon_drill,gerber_drills,position,board_top_png,board_bottom_png
-
-erc_and_fab:
-	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s drc  print_sch interactive_bom bom_html bom_csv
+	  -s gerbers excellon_drill gerber_drills position board_top_png board_bottom_png
 
 drc_and_fab:
-	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s erc print_pcb gerbers excellon_drill gerber_drills position _blender_3d_top
-
+	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s drc print_pcb gerbers excellon_drill gerber_drills position
+	
