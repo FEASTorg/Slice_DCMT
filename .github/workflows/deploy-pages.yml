@@ -60,9 +60,9 @@ jobs:
           mkdir -p docs/kibot
           printf '%s\n' "${{ steps.cfg.outputs.artifacts }}" | while IFS= read -r f; do
             [ -z "$f" ] && continue
-            SRC=$(find _downloads -type f -name "$f" | head -n1 || true)
+            SRC=$(find _downloads -type f -path "*/$f" -print -quit || true)
             if [ -n "$SRC" ]; then
-              cp "$SRC" docs/kibot/
+              cp "$SRC" "docs/kibot/$(basename "$SRC")"
             else
               echo "Warning: $f not found in artifact"
             fi
