@@ -7,4 +7,5 @@
 - [Components Sourcing](components_sourcing.md)
 - [Testing](testing.md)
 
+### [Assets](assets)
 ### [Kibot](kibot)

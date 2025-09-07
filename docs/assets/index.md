@@ -1,4 +1,4 @@
-# Kibot
+# Assets
 
 ## Contents
 
