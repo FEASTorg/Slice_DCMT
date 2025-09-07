@@ -19,13 +19,9 @@ jobs:
   kibot:
     uses: ./.github/workflows/kibot-ci.yml
 
-  gen-main-index:
-    uses: ./.github/workflows/generate-main-index.yml
-    needs: kibot
-
   gen-kibot-index:
     uses: ./.github/workflows/generate-kibot-index.yml
-    needs: [kibot, gen-main-index]
+    needs: [kibot]
     with:
       kibot_run_id: ${{ needs.kibot.outputs.kibot_run_id }}
 

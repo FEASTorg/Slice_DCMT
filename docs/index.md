@@ -17,12 +17,3 @@ Welcome to the Slice DCMT project documentation.
   <img src="{{ '/assets/boards/board_bottom.png' | relative_url }}" alt="Board Bottom" width="300">
   <figcaption>Bottom</figcaption>
 </figure>
-
-## Contents
-
-- [Architecture](architecture.md)
-- [Changelog](changelog.md)
-- [Components Sourcing](components_sourcing.md)
-- [Testing](testing.md)
-
-### [Kibot](kibot)

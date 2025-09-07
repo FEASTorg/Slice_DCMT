@@ -21,7 +21,6 @@ permalink: /:path/
 # Don't publish these
 exclude:
   - TODO.md
-  - .indexignore
   - kibot/index_template.md
   - kibot/config.kibot.site.yml
   - README.md
