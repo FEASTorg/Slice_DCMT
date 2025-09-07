@@ -7,10 +7,9 @@ artifacts:
   - Schematic.pdf
   - PCB.pdf
   - kibot.log
-    - BoM
-    - Drill
-    - Gerbers
-    - Position
-    - Render_3D
-    - index.html
+  - BoM
+  - Drill
+  - Gerbers
+  - Position
+  - Render_3D
 ```
