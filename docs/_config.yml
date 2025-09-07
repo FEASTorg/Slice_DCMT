@@ -25,7 +25,6 @@ exclude:
   - kibot/index_template.md
   - kibot/config.kibot.site.yml
   - README.md
-  - assets/
 
 # automatically apply layout: page to all docs/*.md
 defaults:
