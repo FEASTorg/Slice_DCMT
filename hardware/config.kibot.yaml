@@ -164,7 +164,7 @@ outputs:
     type: pcbdraw
     dir: Images
     options:
-      format: PNG
+      format: png
       dpi: 300
       side: front
       output: "board_top.png"
@@ -174,7 +174,7 @@ outputs:
     type: pcbdraw
     dir: Images
     options:
-      format: PNG
+      format: png
       dpi: 300
       side: back
       mirror: true
