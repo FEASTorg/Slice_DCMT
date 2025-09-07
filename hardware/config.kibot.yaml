@@ -177,5 +177,4 @@ outputs:
       format: png
       dpi: 300
       side: back
-      mirror: true
       output: "board_bottom.png"
