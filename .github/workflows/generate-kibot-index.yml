@@ -50,7 +50,7 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ inputs.kibot_run_id }}
 
-      - name: Resolve artifact list from config
+      - name: Resolve artifact list & project from config
         id: resolve
         run: |
           python3 - <<'EOF'
@@ -59,19 +59,25 @@ jobs:
           artifacts = cfg.get("artifacts", [])
           found = []
           for pat in artifacts:
-              m = glob.glob(f"_kibot_art/**/{pat}", recursive=True)
-              if m:
-                  found.append(os.path.basename(m[0]))
+              patterns = [pat]
+              if any(c in pat for c in "*?["):
+                  patterns.append(os.path.basename(pat))
+              matches = []
+              for p in patterns:
+                  matches += glob.glob(os.path.join("_kibot_art","**",p), recursive=True)
+              if matches:
+                  found.append(os.path.basename(matches[0]))
           with open(os.environ["GITHUB_OUTPUT"], "a") as g:
               g.write(f"list={','.join(found)}\n")
+              g.write(f"project={cfg.get('project_name','')}\n")
           EOF
 
       - name: Generate docs/kibot/index.md
         run: |
           python scripts/generate_kibot_index.py \
-            --config docs/kibot/config.kibot.site.yml \
             --template docs/kibot/index_template.md \
             --out-md docs/kibot/index.md \
+            --project "${{ steps.resolve.outputs.project }}" \
             --artifacts "${{ steps.resolve.outputs.list }}"
 
       - name: Read image list from config
