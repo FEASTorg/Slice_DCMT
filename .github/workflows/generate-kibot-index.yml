@@ -38,9 +38,11 @@ jobs:
       - uses: actions/setup-python@v4
         with: { python-version: "3.x" }
 
-      - name: Install Python deps
+      - name: Install deps
         run: |
           pip install markdown2 pyyaml
+          sudo apt-get update
+          sudo apt-get install -y yq
 
       - name: Generate docs/kibot/index.md
         run: |

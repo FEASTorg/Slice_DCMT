@@ -46,11 +46,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { submodules: true }
+      - name: Install yq
+        run: |
+          apt-get update
+          apt-get install -y yq
       - name: Load OUT_DIR
         id: config
         run: |
-          yq --version
-          OUT_DIR=$(yq eval '.output_dir' "$CONFIG_FILE")
+          OUT_DIR=$(yq -r '.output_dir' "$CONFIG_FILE")
           echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
