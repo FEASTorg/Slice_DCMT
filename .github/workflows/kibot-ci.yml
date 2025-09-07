@@ -49,7 +49,8 @@ jobs:
       - name: Load OUT_DIR
         id: config
         run: |
-          OUT_DIR=$(yq -r '.output_dir' "$CONFIG_FILE")
+          yq --version
+          OUT_DIR=$(yq eval '.output_dir' "$CONFIG_FILE")
           echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
