@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
 import yaml
-import markdown2
 
 
 def load_config(config_file: Path) -> dict:
-    with config_file.open("r") as f:
-        return yaml.safe_load(f)
+    with config_file.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
 
 
 def render_template(
     template: str, project: str, artifacts: list[str], timestamp: str
 ) -> str:
-    lines = []
-    for a in artifacts:
-        a = a.strip()
-        if a:
-            lines.append(f"- [{a}](./{a})")
-    links_block = "\n".join(lines)
-
+    # preserve order, drop duplicates
+    seen = set()
+    uniq = [
+        a.strip()
+        for a in artifacts
+        if a.strip() and (a.lower() not in seen and not seen.add(a.lower()))
+    ]
+    links_block = "\n".join(f"- [{a}](./{a})" for a in uniq)
     return (
         template.replace("$PROJECT_NAME", project)
         .replace("$LINKS", links_block)
@@ -31,9 +31,7 @@ def render_template(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate index.md and index.html for KiBot outputs"
-    )
+    parser = argparse.ArgumentParser(description="Generate index.md for KiBot outputs")
     parser.add_argument(
         "-c", "--config", type=Path, help="Path to config.kibot.site.yml"
     )
@@ -42,22 +40,20 @@ def main():
         "--artifacts", type=str, help="Comma-separated list of artifacts"
     )
     parser.add_argument(
-        "--template", type=Path, default=Path("docs/kibot_index_template.md")
+        "--template", type=Path, default=Path("docs/kibot/index_template.md")
     )
-    parser.add_argument("--out-md", type=Path, default=Path("docs/kibot_index.md"))
-    parser.add_argument("--out-html", type=Path, default=Path("docs/kibot_index.html"))
-    parser.add_argument("--html", action="store_true", help="Also generate index.html")
+    parser.add_argument("--out-md", type=Path, default=Path("docs/kibot/index.md"))
     args = parser.parse_args()
 
-    # Load config unless everything is overridden
     project = args.project
-    artifacts = []
+    artifacts: list[str] = []
+
     if args.artifacts:
         artifacts = [a.strip() for a in args.artifacts.split(",") if a.strip()]
     elif args.config:
         cfg = load_config(args.config)
-        project = project or cfg["project_name"]
-        artifacts = artifacts or cfg["artifacts"]
+        project = project or cfg.get("project_name", "")
+        artifacts = cfg.get("artifacts", []) or []
     else:
         print(
             "❌ Either --config or both --project and --artifacts must be provided.",
@@ -65,20 +61,13 @@ def main():
         )
         sys.exit(1)
 
-    # Prepare timestamp and read template
-    timestamp = datetime.now().strftime("%Y-%m-%d at %H:%M:%S %Z")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d at %H:%M:%S UTC")
     template_str = args.template.read_text(encoding="utf-8")
+    index_md = render_template(template_str, project or "", artifacts, timestamp)
 
-    # Generate and write index.md
-    index_md = render_template(template_str, project, artifacts, timestamp)
     args.out_md.parent.mkdir(parents=True, exist_ok=True)
-    args.out_md.write_text(index_md, encoding="utf-8")
+    args.out_md.write_text(index_md.rstrip() + "\n", encoding="utf-8")
     print(f"✔ Wrote {args.out_md}")
-
-    if args.html:
-        html = markdown2.markdown(index_md)
-        args.out_html.write_text(html, encoding="utf-8")
-        print(f"✔ Wrote {args.out_html}")
 
 
 if __name__ == "__main__":

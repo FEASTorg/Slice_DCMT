@@ -8,20 +8,21 @@ def load_ignore(base_dir: Path):
     ignore_file = base_dir / ".indexignore"
     patterns = []
     if ignore_file.exists():
-        for line in ignore_file.read_text().splitlines():
+        for line in ignore_file.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
             patterns.append(line)
-    patterns.append("index.md")  # always ignore old indexes
+    # always ignore existing indexes and Pages marker
+    patterns += ["index.md"]
     return patterns
 
 
 def should_ignore(path: Path, patterns, base: Path):
     rel_path = path.relative_to(base).as_posix()
+    name = path.name
     return any(
-        fnmatch.fnmatch(path.name, pat) or fnmatch.fnmatch(rel_path, pat)
-        for pat in patterns
+        fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(rel_path, pat) for pat in patterns
     )
 
 
@@ -41,7 +42,7 @@ def make_index(dir_path: Path, base_dir: Path):
 
     parts.append("## Contents\n\n")
 
-    # 2) List markdown files
+    # 2) List markdown files (excluding index/readme)
     for md in sorted(dir_path.glob("*.md")):
         if should_ignore(md, patterns, base_dir) or md.name.lower() in (
             "readme.md",
