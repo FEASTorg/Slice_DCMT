@@ -17,18 +17,11 @@ def render_template(
     template: str, project: str, artifacts: list[str], timestamp: str
 ) -> str:
     lines = []
-    base_dir = Path("Generated")
-    for pattern in artifacts:
-        matches = base_dir.glob(pattern)
-        matched = False
-        for match in sorted(matches):
-            matched = True
-            rel_path = match.relative_to(base_dir).as_posix()
-            lines.append(f"- [{rel_path}](./{rel_path})")
-        if not matched:
-            print(f"⚠ No matches for pattern: {pattern}", file=sys.stderr)
-
-    links_block = "\n".join(lines) if lines else "_No artifacts found to link._"
+    for a in artifacts:
+        a = a.strip()
+        if a:
+            lines.append(f"- [{a}](./{a})")
+    links_block = "\n".join(lines)
 
     return (
         template.replace("$PROJECT_NAME", project)
@@ -73,7 +66,7 @@ def main():
         sys.exit(1)
 
     # Prepare timestamp and read template
-    timestamp = datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
+    timestamp = datetime.now().strftime("%Y-%m-%d at %H:%M:%S %Z")
     template_str = args.template.read_text(encoding="utf-8")
 
     # Generate and write index.md
