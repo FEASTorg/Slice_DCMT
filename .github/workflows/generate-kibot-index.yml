@@ -50,35 +50,47 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ inputs.kibot_run_id }}
 
-      - name: Resolve artifact list & project from config
+      - name: Resolve artifact list & project from config (handles globs + case)
         id: resolve
         run: |
-          python3 - <<'EOF'
-          import os, yaml, fnmatch
+          python3 - <<'PY'
+          import os, yaml, fnmatch, sys
           ROOT = "_kibot_art"
           cfg = yaml.safe_load(open("docs/kibot/config.kibot.site.yml"))
-          arts = cfg.get("artifacts", [])
-          # index all files (relative to ROOT)
+          pats = cfg.get("artifacts", []) or []
+          # Add tolerant alternates for iBOM naming (case/format variations)
+          ibom_alts = ["BoM/*_iBoM.html", "BoM/*ibom.html", "*_iBoM.html", "*ibom.html"]
+          if not any("ibom" in p.lower() for p in pats):
+              pats += ibom_alts
           files = []
           for r,_,fs in os.walk(ROOT):
             for f in fs:
               files.append(os.path.relpath(os.path.join(r,f), ROOT))
-          def anymatch(pat, rel):
-            # try full and basename patterns, both case-sensitive and insensitive
-            cands = [pat, os.path.basename(pat)]
-            return any(
-              fnmatch.fnmatch(rel, c) or fnmatch.fnmatch(rel.lower(), c.lower())
-              for c in cands
-            )
+          def match(pat, rel):
+            return (fnmatch.fnmatch(rel, pat) or
+                    fnmatch.fnmatch(rel.lower(), pat.lower()) or
+                    fnmatch.fnmatch(os.path.basename(rel), pat) or
+                    fnmatch.fnmatch(os.path.basename(rel).lower(), pat.lower()))
           found = []
-          for pat in arts:
-            matches = [f for f in files if anymatch(pat, f)]
-            if matches:
-              found.append(os.path.basename(sorted(matches)[0]))
+          seen = set()
+          for pat in pats:
+            ms = [f for f in files if match(pat, f)]
+            if ms:
+              ms.sort(key=lambda s:(len(s), s))
+              base = os.path.basename(ms[0])
+              if base.lower() not in seen:
+                seen.add(base.lower())
+                found.append(base)
+          # keep only unique, stable order, and prefer the 3 core files first if present
+          core = ["Schematic.pdf","PCB.pdf","kibot.log"]
+          core_out = [x for x in core if x in found]
+          rest = [x for x in found if x not in core]
+          final = core_out + rest
+          print("Resolved artifacts:", ", ".join(final) or "(none)")
           with open(os.environ["GITHUB_OUTPUT"], "a") as g:
-            g.write(f"list={','.join(found)}\n")
+            g.write(f"list={','.join(final)}\n")
             g.write(f"project={cfg.get('project_name','')}\n")
-          EOF
+          PY
 
       - name: Generate docs/kibot/index.md
         run: |
@@ -107,7 +119,8 @@ jobs:
           mkdir -p docs/assets/boards
           printf '%s\n' "${{ steps.cfg.outputs.images }}" | while IFS= read -r f; do
             [ -z "$f" ] && continue
-            src=$(find _kibot_art -type f -name "$f" | head -n1 || true)
+            # case-insensitive match for safety
+            src=$(find _kibot_art -type f -iname "$f" | head -n1 || true)
             if [ -n "$src" ]; then
               cp "$src" "docs/assets/boards/$f"
               git add "docs/assets/boards/$f"
@@ -121,13 +134,11 @@ jobs:
           set -e
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-
           git add docs/kibot/index.md || true
           if git diff --cached --quiet; then
             echo "✅ Nothing to commit."
             exit 0
           fi
-
           git commit -m "📄 KiBot index + board renders (auto)"
           git fetch origin main
           git pull --rebase origin main
