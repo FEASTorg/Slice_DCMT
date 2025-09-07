@@ -1,4 +1,8 @@
-# KiBot Outputs
+---
+title: "KiBot Outputs"
+description: "Index for KiBot-generated index of PCB artifacts.
+layout: "page"
+---
 
 These are the docs & KiBot Outputs for $PROJECT_NAME
 

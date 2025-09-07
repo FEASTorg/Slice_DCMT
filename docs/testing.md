@@ -1,4 +1,7 @@
-# 🧪 Testing Instructions
+---
+title: "Testing Instructions"
+description: "Hardware and firmware testing checklist and procedures for Slice DCMT."
+---
 
 Testing procedures for this Slice. Covers manual validation and optional automated checks.
 

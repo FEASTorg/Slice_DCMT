@@ -1,4 +1,7 @@
-# Components Sourcing
+---
+title: "Components Sourcing"
+description: "Notes and vendor links for sourcing driver ICs and parts."
+---
 
 ## Driver Options
 

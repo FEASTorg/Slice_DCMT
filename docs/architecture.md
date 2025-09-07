@@ -1,4 +1,7 @@
-# 📐 Architecture Overview
+---
+title: "Architecture Overview"
+description: "High-level architecture: electrical, firmware, and mechanical design notes for Slice DCMT."
+---
 
 Overview of the electrical, firmware, and mechanical design of this Slice.
 

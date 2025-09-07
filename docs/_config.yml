@@ -4,7 +4,7 @@ description: >
 baseurl: "/Slice_DCMT"
 url: "https://feastorg.github.io"
 
-remote_theme: jekyll/minima
+remote_theme: pmarsceill/just-the-docs
 
 plugins:
   - jekyll-feed
@@ -14,6 +14,9 @@ plugins:
 markdown: kramdown
 kramdown:
   input: GFM
+
+# Site/permalink settings useful for GitHub Pages docs
+permalink: /:path/
 
 # Don't publish these
 exclude:
@@ -29,3 +32,11 @@ defaults:
       type: "pages"
     values:
       layout: "page"
+
+# Just the Docs theme settings
+just_the_docs:
+  logo:
+    alt: "Slice DCMT"
+  show_nav_level: 2
+  collections:
+    enable: false
