@@ -38,7 +38,7 @@ jobs:
 
       - name: Generate docs/kibot/index.md
         run: |
-          python scripts/gen_kibot_index.py \
+          python scripts/generate_kibot_index.py \
             --config docs/kibot/config.kibot.site.yml \
             --template docs/kibot/index_template.md \
             --out-md docs/kibot/index.md

@@ -24,7 +24,7 @@ jobs:
         with: { python-version: "3.x" }
 
       - name: Generate all docs/index.md
-        run: python scripts/generate_docs_index.py
+        run: python scripts/generate_main_index.py
 
       - name: Commit & push (rebase if needed)
         run: |
