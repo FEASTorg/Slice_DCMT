@@ -38,11 +38,8 @@ jobs:
       - uses: actions/setup-python@v4
         with: { python-version: "3.x" }
 
-      - name: Install deps
-        run: |
-          pip install markdown2 pyyaml
-          sudo apt-get update
-          sudo apt-get install -y yq
+      - name: Install Python deps
+        run: pip install markdown2 pyyaml
 
       - name: Generate docs/kibot/index.md
         run: |
@@ -59,26 +56,33 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ inputs.kibot_run_id }}
 
+      - name: Read image list from config
+        id: cfg
+        run: |
+          python3 - <<'PY'
+          import os, yaml
+          cfg = yaml.safe_load(open("docs/kibot/config.kibot.site.yml"))
+          imgs = cfg.get("images", [])
+          with open(os.environ["GITHUB_OUTPUT"], "a") as g:
+              g.write("images<<EOF\n")
+              g.write("\n".join(imgs))
+              g.write("\nEOF\n")
+          PY
+
       - name: Copy board images into repo (docs/assets/boards)
-        id: copyimgs
         run: |
           set -e
           mkdir -p docs/assets/boards
-          imgs=$(yq -r '.images[]' docs/kibot/config.kibot.site.yml || true)
-          changed=0
-          for f in $imgs; do
+          printf '%s\n' "${{ steps.cfg.outputs.images }}" | while IFS= read -r f; do
+            [ -z "$f" ] && continue
             src=$(find _kibot_art -type f -name "$f" | head -n1 || true)
             if [ -n "$src" ]; then
-              dest="docs/assets/boards/$f"
-              cp "$src" "$dest"
-              if ! git diff --quiet -- "$dest"; then
-                changed=1
-              fi
+              cp "$src" "docs/assets/boards/$f"
+              git add "docs/assets/boards/$f"
             else
               echo "WARN: $f not found in artifact"
             fi
           done
-          echo "changed=$changed" >> "$GITHUB_OUTPUT"
 
       - name: Commit & push (safe rebase)
         run: |
@@ -86,7 +90,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
 
-          git add docs/kibot/index.md docs/assets/boards || true
+          git add docs/kibot/index.md || true
           if git diff --cached --quiet; then
             echo "✅ Nothing to commit."
             exit 0

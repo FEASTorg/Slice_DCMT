@@ -8,7 +8,7 @@ on:
         value: ${{ jobs.meta.outputs.run_id }}
 
 env:
-  CONFIG_FILE: docs/kibot/config.kibot.site.yml
+  OUT_DIR: Generated
 
 permissions:
   contents: read
@@ -46,17 +46,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { submodules: true }
-      - name: Install yq
-        run: |
-          apt-get update
-          apt-get install -y yq
-      - name: Load OUT_DIR
-        id: config
-        run: |
-          OUT_DIR=$(yq -r '.output_dir' "$CONFIG_FILE")
-          echo "out_dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
+
       - name: Generate SCH files
         run: make -C hardware/ sch_fab
+
       - name: Generate PCB Fab Files (with retry)
         run: |
           for i in 1 2 3; do
@@ -71,8 +64,9 @@ jobs:
               sleep 10
             fi
           done
+
       - name: Upload KiBot outputs
         uses: actions/upload-artifact@v4
         with:
           name: kibot-site
-          path: hardware/${{ steps.config.outputs.out_dir }}
+          path: hardware/${{ env.OUT_DIR }}
