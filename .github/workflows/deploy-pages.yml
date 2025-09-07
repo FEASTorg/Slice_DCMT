@@ -57,17 +57,27 @@ jobs:
 
       - name: Stage selected KiBot outputs into docs/kibot (build-only)
         run: |
+          set -e
           mkdir -p docs/kibot
-          printf '%s\n' "${{ steps.cfg.outputs.artifacts }}" | while IFS= read -r f; do
-            [ -z "$f" ] && continue
-            SRC=$(find _downloads -type f -path "*/$f" -print -quit || true)
-            if [ -n "$SRC" ]; then
-              cp "$SRC" "docs/kibot/$(basename "$SRC")"
-            else
-              echo "Warning: $f not found in artifact"
-            fi
-          done
+
+          echo "=== _downloads tree ==="
+          ls -laR _downloads || true
+
+          # Copy ALL matches for each configured pattern (case-insensitive)
+          while IFS= read -r pat; do
+            [ -z "$pat" ] && continue
+            echo "Pattern: $pat"
+            while IFS= read -r -d '' SRC; do
+              dst="docs/kibot/$(basename "$SRC")"
+              echo "  -> $SRC  -->  $dst"
+              cp "$SRC" "$dst"
+            done < <(find _downloads -type f -ipath "*/$pat" -print0)
+          done <<< "${{ steps.cfg.outputs.artifacts }}"
+
           touch docs/.nojekyll
+
+          echo "=== staged docs/kibot ==="
+          ls -la docs/kibot
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
