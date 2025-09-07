@@ -47,11 +47,22 @@ jobs:
       - uses: actions/checkout@v4
         with: { submodules: true }
 
+      # Cache KiCad 3D models used by KiBot (pcbdraw/blender/etc.)
+      - name: Cache 3D models
+        id: cache-3d
+        uses: actions/cache@v4
+        with:
+          path: ~/cache_3d
+          key: cache_3d-v1
+
       - name: Generate SCH files
-        run: make -C hardware/ sch_fab
+        run: |
+          export KIBOT_3D_MODELS="$HOME/cache_3d"
+          make -C hardware/ sch_fab
 
       - name: Generate PCB Fab Files (with retry)
         run: |
+          export KIBOT_3D_MODELS="$HOME/cache_3d"
           for i in 1 2 3; do
             if make -C hardware/ pcb_fab; then
               echo "Success on attempt $i"
