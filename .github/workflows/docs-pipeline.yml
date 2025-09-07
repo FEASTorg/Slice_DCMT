@@ -1,4 +1,4 @@
-name: Orchestrate Docs Workflows
+name: Docs Pipeline
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/kibot-ci.yml
 
   gen-kibot-index:
-    uses: ./.github/workflows/generate-kibot-index.yml
+    uses: ./.github/workflows/publish-kibot.yml
     needs: [kibot]
     with:
       kibot_run_id: ${{ needs.kibot.outputs.kibot_run_id }}

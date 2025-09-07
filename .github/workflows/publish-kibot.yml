@@ -1,4 +1,4 @@
-name: Generate KiBot index
+name: Publish KiBot docs
 
 on:
   workflow_call:
