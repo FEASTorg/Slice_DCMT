@@ -1,6 +1,7 @@
 ---
 title: "Slice DCMT Documentation"
 description: "Overview and entry page for Slice DCMT project documentation."
+nav_exclude: true
 ---
 
 Welcome to the Slice DCMT project documentation.
