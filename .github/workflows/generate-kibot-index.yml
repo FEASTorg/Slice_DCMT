@@ -54,42 +54,64 @@ jobs:
         id: resolve
         run: |
           python3 - <<'PY'
-          import os, yaml, fnmatch, sys
+          import os, yaml, fnmatch
           ROOT = "_kibot_art"
           cfg = yaml.safe_load(open("docs/kibot/config.kibot.site.yml"))
           pats = cfg.get("artifacts", []) or []
-          # Add tolerant alternates for iBOM naming (case/format variations)
           ibom_alts = ["BoM/*_iBoM.html", "BoM/*ibom.html", "*_iBoM.html", "*ibom.html"]
           if not any("ibom" in p.lower() for p in pats):
               pats += ibom_alts
+
+          print("🔍 Artifact patterns to match:")
+          for p in pats:
+              print(f"  - {p}")
+
           files = []
           for r,_,fs in os.walk(ROOT):
-            for f in fs:
-              files.append(os.path.relpath(os.path.join(r,f), ROOT))
+              for f in fs:
+                  rel = os.path.relpath(os.path.join(r,f), ROOT)
+                  files.append(rel)
+
+          print(f"📦 Found {len(files)} files in _kibot_art:")
+          for f in files:
+              print(f"  - {f}")
+
           def match(pat, rel):
-            return (fnmatch.fnmatch(rel, pat) or
-                    fnmatch.fnmatch(rel.lower(), pat.lower()) or
-                    fnmatch.fnmatch(os.path.basename(rel), pat) or
-                    fnmatch.fnmatch(os.path.basename(rel).lower(), pat.lower()))
+              candidates = [
+                  fnmatch.fnmatch(rel, pat),
+                  fnmatch.fnmatch(rel.lower(), pat.lower()),
+                  fnmatch.fnmatch(os.path.basename(rel), pat),
+                  fnmatch.fnmatch(os.path.basename(rel).lower(), pat.lower()),
+              ]
+              if any(candidates):
+                  print(f"✅ MATCH: '{rel}' ↔ '{pat}'")
+              else:
+                  print(f"❌ NO MATCH: '{rel}' ↔ '{pat}'")
+              return any(candidates)
+
           found = []
           seen = set()
           for pat in pats:
-            ms = [f for f in files if match(pat, f)]
-            if ms:
-              ms.sort(key=lambda s:(len(s), s))
-              base = os.path.basename(ms[0])
-              if base.lower() not in seen:
-                seen.add(base.lower())
-                found.append(base)
-          # keep only unique, stable order, and prefer the 3 core files first if present
+              matches = [f for f in files if match(pat, f)]
+              if matches:
+                  matches.sort(key=lambda s:(len(s), s))
+                  base = os.path.basename(matches[0])
+                  if base.lower() not in seen:
+                      seen.add(base.lower())
+                      found.append(base)
+
           core = ["Schematic.pdf","PCB.pdf","kibot.log"]
           core_out = [x for x in core if x in found]
           rest = [x for x in found if x not in core]
           final = core_out + rest
-          print("Resolved artifacts:", ", ".join(final) or "(none)")
+
+          print("📝 Final resolved artifacts:")
+          for a in final:
+              print(f"  - {a}")
+
           with open(os.environ["GITHUB_OUTPUT"], "a") as g:
-            g.write(f"list={','.join(final)}\n")
-            g.write(f"project={cfg.get('project_name','')}\n")
+              g.write(f"list={','.join(final)}\n")
+              g.write(f"project={cfg.get('project_name','')}\n")
           PY
 
       - name: Generate docs/kibot/index.md
