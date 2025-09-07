@@ -58,60 +58,39 @@ jobs:
           ROOT = "_kibot_art"
           cfg = yaml.safe_load(open("docs/kibot/config.kibot.site.yml"))
           pats = cfg.get("artifacts", []) or []
+          # tolerant alternates for iBOM naming
           ibom_alts = ["BoM/*_iBoM.html", "BoM/*ibom.html", "*_iBoM.html", "*ibom.html"]
           if not any("ibom" in p.lower() for p in pats):
               pats += ibom_alts
 
-          print("🔍 Artifact patterns to match:")
-          for p in pats:
-              print(f"  - {p}")
-
           files = []
           for r,_,fs in os.walk(ROOT):
-              for f in fs:
-                  rel = os.path.relpath(os.path.join(r,f), ROOT)
-                  files.append(rel)
-
-          print(f"📦 Found {len(files)} files in _kibot_art:")
-          for f in files:
-              print(f"  - {f}")
+            for f in fs:
+              files.append(os.path.relpath(os.path.join(r,f), ROOT))
 
           def match(pat, rel):
-              candidates = [
-                  fnmatch.fnmatch(rel, pat),
-                  fnmatch.fnmatch(rel.lower(), pat.lower()),
-                  fnmatch.fnmatch(os.path.basename(rel), pat),
-                  fnmatch.fnmatch(os.path.basename(rel).lower(), pat.lower()),
-              ]
-              if any(candidates):
-                  print(f"✅ MATCH: '{rel}' ↔ '{pat}'")
-              else:
-                  print(f"❌ NO MATCH: '{rel}' ↔ '{pat}'")
-              return any(candidates)
+            return (fnmatch.fnmatch(rel, pat) or
+                    fnmatch.fnmatch(rel.lower(), pat.lower()) or
+                    fnmatch.fnmatch(os.path.basename(rel), pat) or
+                    fnmatch.fnmatch(os.path.basename(rel).lower(), pat.lower()))
 
           found = []
           seen = set()
           for pat in pats:
-              matches = [f for f in files if match(pat, f)]
-              if matches:
-                  matches.sort(key=lambda s:(len(s), s))
-                  base = os.path.basename(matches[0])
-                  if base.lower() not in seen:
-                      seen.add(base.lower())
-                      found.append(base)
+            ms = [f for f in files if match(pat, f)]
+            if ms:
+              ms.sort(key=lambda s:(len(s), s))
+              base = os.path.basename(ms[0])
+              if base.lower() not in seen:
+                seen.add(base.lower())
+                found.append(base)
 
-          core = ["Schematic.pdf","PCB.pdf","kibot.log"]
-          core_out = [x for x in core if x in found]
-          rest = [x for x in found if x not in core]
-          final = core_out + rest
-
-          print("📝 Final resolved artifacts:")
-          for a in final:
-              print(f"  - {a}")
+          core = ["Schematic.pdf", "PCB.pdf", "kibot.log"]
+          final = [x for x in core if x in found] + [x for x in found if x not in core]
 
           with open(os.environ["GITHUB_OUTPUT"], "a") as g:
-              g.write(f"list={','.join(final)}\n")
-              g.write(f"project={cfg.get('project_name','')}\n")
+            g.write(f"list={','.join(final)}\n")
+            g.write(f"project={cfg.get('project_name','')}\n")
           PY
 
       - name: Generate docs/kibot/index.md
@@ -130,30 +109,29 @@ jobs:
           cfg = yaml.safe_load(open("docs/kibot/config.kibot.site.yml"))
           imgs = cfg.get("images", [])
           with open(os.environ["GITHUB_OUTPUT"], "a") as g:
-              g.write("images<<EOF\n")
-              g.write("\n".join(imgs))
-              g.write("\nEOF\n")
+            g.write("images<<EOF\n")
+            g.write("\n".join(imgs))
+            g.write("\nEOF\n")
           PY
 
       - name: Copy board images into repo (docs/assets/boards)
         run: |
-          set -e
+          set -euo pipefail
           mkdir -p docs/assets/boards
-          printf '%s\n' "${{ steps.cfg.outputs.images }}" | while IFS= read -r f; do
+          while IFS= read -r f; do
             [ -z "$f" ] && continue
-            # case-insensitive match for safety
-            src=$(find _kibot_art -type f -iname "$f" | head -n1 || true)
-            if [ -n "$src" ]; then
-              cp "$src" "docs/assets/boards/$f"
+            src=$(find _kibot_art -type f -iname "$f" -print -quit || true)
+            if [ -n "${src:-}" ]; then
+              cp -f "$src" "docs/assets/boards/$f"
               git add "docs/assets/boards/$f"
             else
-              echo "WARN: $f not found in artifact"
+              echo "WARN: $f not found in artifact" >&2
             fi
-          done
+          done <<< "${{ steps.cfg.outputs.images }}"
 
       - name: Commit & push (safe rebase)
         run: |
-          set -e
+          set -euo pipefail
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add docs/kibot/index.md || true
