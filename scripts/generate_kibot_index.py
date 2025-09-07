@@ -17,10 +17,11 @@ def render_template(
     template: str, project: str, artifacts: list[str], timestamp: str
 ) -> str:
     lines = []
-    for a in artifacts:
-        a = a.strip()
-        if a:
-            lines.append(f"- [{a}](./{a})")
+    for pattern in artifacts:
+        matches = Path("Generated").glob(pattern)
+        for match in sorted(matches):
+            rel_path = match.as_posix()
+            lines.append(f"- [{rel_path}](./{rel_path})")
     links_block = "\n".join(lines)
 
     return (
@@ -34,7 +35,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Generate index.md and index.html for KiBot outputs"
     )
-    parser.add_argument("-c", "--config", type=Path, help="Path to config.kibot.site.yml")
+    parser.add_argument(
+        "-c", "--config", type=Path, help="Path to config.kibot.site.yml"
+    )
     parser.add_argument("--project", type=str, help="Override project name")
     parser.add_argument(
         "--artifacts", type=str, help="Comma-separated list of artifacts"
