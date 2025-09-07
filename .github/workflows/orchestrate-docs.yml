@@ -10,23 +10,18 @@ on:
       - ".github/workflows/**"
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 jobs:
   kibot:
-    uses: ./.github/workflows/kibot-ci.yml
+    uses: FEASTorg/slice-infra/.github/workflows/kibot-ci.yml@main
 
   gen-kibot-index:
-    uses: ./.github/workflows/publish-kibot.yml
+    uses: FEASTorg/slice-infra/.github/workflows/publish-kibot.yml@main
     needs: [kibot]
     with:
       kibot_run_id: ${{ needs.kibot.outputs.kibot_run_id }}
 
   deploy-pages:
-    uses: ./.github/workflows/deploy-pages.yml
+    uses: FEASTorg/slice-infra/.github/workflows/deploy-pages.yml@main
     needs: [gen-kibot-index]
     with:
       kibot_run_id: ${{ needs.kibot.outputs.kibot_run_id }}
