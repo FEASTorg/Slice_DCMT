@@ -1,6 +1,6 @@
 ---
 title: "KiBot Outputs"
-description: "Index for KiBot-generated index of PCB artifacts.
+description: "Index for KiBot-generated PCB artifacts."
 layout: "page"
 ---
 

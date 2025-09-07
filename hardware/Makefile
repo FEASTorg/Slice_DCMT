@@ -18,7 +18,7 @@ sch_fab:
 	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s erc,drc  print_sch interactive_bom bom_html bom_csv
 
 pcb_fab:
-	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s all print_pcb gerbers excellon_drill gerber_drills position _blender_3d_top
+	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) \ -s print_pcb,gerbers,excellon_drill,gerber_drills,position,board_top_png,board_bottom_png
 
 erc_and_fab:
 	$(KIBOT) $(EXTRA_OPS) -d $(OUT_DIR) -s drc  print_sch interactive_bom bom_html bom_csv
