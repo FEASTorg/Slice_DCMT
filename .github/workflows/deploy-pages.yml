@@ -30,12 +30,7 @@ jobs:
         with:
           ref: ${{ inputs.commit_sha }}
           fetch-depth: 0
-
-      - name: Install yq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y yq
-
+          
       - name: Load artifact list
         id: cfg
         run: |
