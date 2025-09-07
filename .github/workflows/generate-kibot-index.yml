@@ -54,22 +54,30 @@ jobs:
         id: resolve
         run: |
           python3 - <<'EOF'
-          import os, yaml, glob
+          import os, yaml, fnmatch
+          ROOT = "_kibot_art"
           cfg = yaml.safe_load(open("docs/kibot/config.kibot.site.yml"))
-          artifacts = cfg.get("artifacts", [])
+          arts = cfg.get("artifacts", [])
+          # index all files (relative to ROOT)
+          files = []
+          for r,_,fs in os.walk(ROOT):
+            for f in fs:
+              files.append(os.path.relpath(os.path.join(r,f), ROOT))
+          def anymatch(pat, rel):
+            # try full and basename patterns, both case-sensitive and insensitive
+            cands = [pat, os.path.basename(pat)]
+            return any(
+              fnmatch.fnmatch(rel, c) or fnmatch.fnmatch(rel.lower(), c.lower())
+              for c in cands
+            )
           found = []
-          for pat in artifacts:
-              patterns = [pat]
-              if any(c in pat for c in "*?["):
-                  patterns.append(os.path.basename(pat))
-              matches = []
-              for p in patterns:
-                  matches += glob.glob(os.path.join("_kibot_art","**",p), recursive=True)
-              if matches:
-                  found.append(os.path.basename(matches[0]))
+          for pat in arts:
+            matches = [f for f in files if anymatch(pat, f)]
+            if matches:
+              found.append(os.path.basename(sorted(matches)[0]))
           with open(os.environ["GITHUB_OUTPUT"], "a") as g:
-              g.write(f"list={','.join(found)}\n")
-              g.write(f"project={cfg.get('project_name','')}\n")
+            g.write(f"list={','.join(found)}\n")
+            g.write(f"project={cfg.get('project_name','')}\n")
           EOF
 
       - name: Generate docs/kibot/index.md
