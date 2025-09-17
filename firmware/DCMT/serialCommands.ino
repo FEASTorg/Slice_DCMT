@@ -34,15 +34,15 @@ void serialCommands()
             if (slice.mode == OPEN_LOOP)
             {
                 float value = command.substring(6).toFloat();
-                if (value < 0)
-                    value = 0;
+                if (value < -255)
+                    value = -255;
                 if (value > 255)
                     value = 255;
                 slice.motor1PWM = value;
             }
             else
             {
-                //Serial.println("Motor1 PWM can only be set in OPEN_LOOP mode");
+                Serial.println("Motor1 PWM can only be set in OPEN_LOOP mode");
             }
         }
         // Set motor2 PWM value. Only available in OPEN_LOOP mode.
@@ -51,15 +51,15 @@ void serialCommands()
             if (slice.mode == OPEN_LOOP)
             {
                 float value = command.substring(6).toFloat();
-                if (value < 0)
-                    value = 0;
+                if (value < -255)
+                    value = -255;
                 if (value > 255)
                     value = 255;
                 slice.motor2PWM = value;
             }
             else
             {
-                //Serial.println("Motor2 PWM can only be set in OPEN_LOOP mode");
+                Serial.println("Motor2 PWM can only be set in OPEN_LOOP mode");
             }
         }
         // Set motor1 position setpoint. Only available in CLOSED_LOOP_POSITION mode.
@@ -72,7 +72,7 @@ void serialCommands()
             }
             else
             {
-                //Serial.println("Motor1 position can only be set in CLOSED_LOOP_POSITION mode");
+                Serial.println("Motor1 position can only be set in CLOSED_LOOP_POSITION mode");
             }
         }
         // Set motor2 position setpoint. Only available in CLOSED_LOOP_POSITION mode.
@@ -85,7 +85,7 @@ void serialCommands()
             }
             else
             {
-                //Serial.println("Motor2 position can only be set in CLOSED_LOOP_POSITION mode");
+                Serial.println("Motor2 position can only be set in CLOSED_LOOP_POSITION mode");
             }
         }
         // Set motor1 speed setpoint. Only available in CLOSED_LOOP_SPEED mode.
@@ -98,7 +98,7 @@ void serialCommands()
             }
             else
             {
-                //Serial.println("Motor1 speed can only be set in CLOSED_LOOP_SPEED mode");
+                Serial.println("Motor1 speed can only be set in CLOSED_LOOP_SPEED mode");
             }
         }
         // Set motor2 speed setpoint. Only available in CLOSED_LOOP_SPEED mode.
@@ -111,12 +111,28 @@ void serialCommands()
             }
             else
             {
-                //Serial.println("Motor2 speed can only be set in CLOSED_LOOP_SPEED mode");
+                Serial.println("Motor2 speed can only be set in CLOSED_LOOP_SPEED mode");
             }
+        }
+        else if (command.startsWith("M1BRAKE"))
+        {
+            slice.motor1Brake = true;
+        }
+        else if (command.startsWith("M1RELEASE"))
+        {
+            slice.motor1Brake = false;
+        }
+        else if (command.startsWith("M2BRAKE"))
+        {
+            slice.motor2Brake = true;
+        }
+        else if (command.startsWith("M2RELEASE"))
+        {
+            slice.motor2Brake = false;
         }
         else
         {
-            //Serial.println("Invalid command format!");
+            // Serial.println("Invalid command format!");
         }
     }
 }

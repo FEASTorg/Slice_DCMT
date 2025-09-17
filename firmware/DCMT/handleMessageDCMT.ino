@@ -48,15 +48,15 @@ void handleMessage(CRUMBSMessage &message)
         // CommandType 1: Change ControlModes Command; UNIVERSAL
         slice.mode = (ControlModes)message.data[0]; // Cast data to ControlModes enum where 0 = OPEN_LOOP, 1 = CLOSED_LOOP_POSITION, 2 = CLOSED_LOOP_SPEED
         SLICE_DEBUG_PRINT(F("Slice: ControlModes Change Command Received. ControlModes: "));
-        if(slice.mode == OPEN_LOOP)
+        if (slice.mode == OPEN_LOOP)
         {
             SLICE_DEBUG_PRINTLN(F("OPEN_LOOP"));
         }
-        else if(slice.mode == CLOSED_LOOP_POSITION)
+        else if (slice.mode == CLOSED_LOOP_POSITION)
         {
             SLICE_DEBUG_PRINTLN(F("CLOSED_LOOP_POSITION"));
         }
-        else if(slice.mode == CLOSED_LOOP_SPEED)
+        else if (slice.mode == CLOSED_LOOP_SPEED)
         {
             SLICE_DEBUG_PRINTLN(F("CLOSED_LOOP_SPEED"));
         }
@@ -67,7 +67,7 @@ void handleMessage(CRUMBSMessage &message)
         break;
 
     case 2:
-        // CommandType 2: Change Setpoint Command; SEMI-UNIVERSAL
+        // CommandType 2: Change Setpoint Command; SEMI-UNIVERSAL for CLOSED_LOOP_ modes
         if (slice.mode == CLOSED_LOOP_POSITION)
         {
             SLICE_DEBUG_PRINTLN(F("Slice: Setpoint Command Received for Position Control."));
@@ -117,6 +117,29 @@ void handleMessage(CRUMBSMessage &message)
         SLICE_DEBUG_PRINT(F(", Kp2: "));
         SLICE_DEBUG_PRINT(message.data[3]);
         SLICE_DEBUG_PRINT(F(", Ki2: "));
+
+    case 4:
+        // CommandType 4: Brake Command
+        if (message.data[0] == 1)
+        {
+            slice.motor1Brake = true; // Set motor 1 brake to engaged
+            SLICE_DEBUG_PRINTLN(F("Slice: Motor 1 Brake Engaged."));
+        }
+        else
+        {
+            slice.motor1Brake = false; // Set motor 1 brake to released
+            SLICE_DEBUG_PRINTLN(F("Slice: Motor 1 Brake Released."));
+        }
+        if (message.data[1] == 1)
+        {
+            slice.motor2Brake = true; // Set motor 2 brake to engaged
+            SLICE_DEBUG_PRINTLN(F("Slice: Motor 2 Brake Engaged."));
+        }
+        else
+        {
+            slice.motor2Brake = false; // Set motor 2 brake to released
+            SLICE_DEBUG_PRINTLN(F("Slice: Motor 2 Brake Released."));
+        }
 
     case 6:
         // CommandType 6: Write to the motors directly (write mode only), can probably wrap into the setpoint command

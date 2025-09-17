@@ -12,17 +12,18 @@ void handleRequest()
 
     // Prepare response message
     CRUMBSMessage responseMessage;
-    responseMessage.typeID = 1;      /**< SLICE type ID */
-    responseMessage.commandType = 0; /**< CommandType 0 for status response */
+    responseMessage.typeID = TYPE_ID;                         /**< SLICE type ID */
+    responseMessage.commandType = 0;                    /**< CommandType 0 for status response */
+    brakeFlag = slice.motor1Brake || slice.motor2Brake; /**< Combined brake status */
 
     if (slice.mode == OPEN_LOOP)
     {
         responseMessage.data[0] = slice.mode;      /**< Mode of operation */
         responseMessage.data[1] = slice.motor1PWM; /**< Motor 1 PWM value */
         responseMessage.data[2] = slice.motor2PWM; /**< Motor 2 PWM value */
-        responseMessage.data[3] = 0;               /**< Blank */
-        responseMessage.data[4] = 0;               /**< Blank */
-        responseMessage.data[5] = 0;               /**< Blank */
+        responseMessage.data[3] = 0;               /**< Left Blank */
+        responseMessage.data[4] = 0;               /**< Left Blank */
+        responseMessage.data[5] = brakeFlag;       /**< Brake status */
     }
     else if (slice.mode == CLOSED_LOOP_POSITION)
     {
@@ -31,7 +32,7 @@ void handleRequest()
         responseMessage.data[2] = slice.motor2PositionSetpoint; /**< Motor 2 position setpoint */
         responseMessage.data[3] = slice.motor1Position;         /**< Motor 1 position */
         responseMessage.data[4] = slice.motor2Position;         /**< Motor 2 position */
-        responseMessage.data[5] = 0;                            /**< Blank */
+        responseMessage.data[5] = brakeFlag;                    /**< Brake status */
     }
     else if (slice.mode == CLOSED_LOOP_SPEED)
     {
@@ -40,7 +41,7 @@ void handleRequest()
         responseMessage.data[2] = slice.motor2SpeedSetpoint; /**< Motor 2 speed setpoint */
         responseMessage.data[3] = slice.motor1Speed;         /**< Motor 1 speed */
         responseMessage.data[4] = slice.motor2Speed;         /**< Motor 2 speed */
-        responseMessage.data[5] = 0;                         /**< Blank */
+        responseMessage.data[5] = brakeFlag;                 /**< Brake status */
     }
 
     responseMessage.errorFlags = 0; /**< No errors */

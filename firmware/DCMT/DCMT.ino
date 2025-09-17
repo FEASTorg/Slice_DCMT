@@ -128,6 +128,8 @@ struct DCMT_SLICE
     float motor2SpeedSetpoint = 0;    // motor 2 speed setpoint
     float motor1Speed = 0;            // motor 1 speed
     float motor2Speed = 0;            // motor 2 speed
+    bool motor1Brake = false;         // motor 1 brake status
+    bool motor2Brake = false;         // motor 2 brake status
     bool eStop = false;               // emergency stop flag
 } slice;
 
@@ -162,7 +164,7 @@ void setupSlice()
     // initialize the LED
     FastLED.addLeds<NEOPIXEL, LED_PIN>(&led, 1);
     FastLED.setBrightness(50); // Set brightness to 50%
-    led = CRGB::Blue;         // Set LED to blue
+    led = CRGB::Blue;          // Set LED to blue
     FastLED.show();
 
     // initialize the estop
@@ -279,17 +281,40 @@ void processEStop()
 
 void motorControlLogic()
 {
-    if (!slice.eStop && slice.mode == CLOSED_LOOP_POSITION)
+    if (slice.motor1Brake || slice.motor2Brake) // Process brakes
+    {
+        // Handle motor 1 brake
+        if (slice.motor1Brake)
+        {
+            slice.motor1PWM = 0;
+            motor1Driver.write(0);
+            motor1Driver.brake();
+        }
+        // Handle motor 2 brake
+        if (slice.motor2Brake)
+        {
+            slice.motor2PWM = 0;
+            motor2Driver.write(0);
+            motor2Driver.brake();
+        }
+    }
+    else if (!slice.eStop && slice.mode == OPEN_LOOP) // Process open loop
+    {
+        // Update the PWM values for the motors
+        motor1Driver.write(slice.motor1PWM);
+        motor2Driver.write(slice.motor2PWM);
+    }
+    else if (!slice.eStop && slice.mode == CLOSED_LOOP_POSITION) // Process closed loop position
     {
         // Update the position setpoints for the motors
         servo1.moveTo(slice.motor1PositionSetpoint);
-        servo2.moveTo(slice.motor2PositionSetpoint); // need if statement to check change instead!!!!
+        servo2.moveTo(slice.motor2PositionSetpoint);       // need if statement to check change instead!!!!
         servo1.run();                                      // Run the servo 1 control loop
         servo2.run();                                      // Run the servo 2 control loop
         slice.motor1Position = servo1.getActualPosition(); // Update the current position from servo 1
         slice.motor2Position = servo2.getActualPosition(); // Update the current position from servo 2
     }
-    else if (!slice.eStop && slice.mode == CLOSED_LOOP_SPEED)
+    else if (!slice.eStop && slice.mode == CLOSED_LOOP_SPEED) // Process closed loop speed
     {
         // Update the speed setpoints for the motors
         tacho1.setSpeedRPM(slice.motor1SpeedSetpoint);
@@ -299,15 +324,11 @@ void motorControlLogic()
         slice.motor1Speed = tacho1.getMeasuredSpeedRPM(); // Update the current speed from tacho 1
         slice.motor2Speed = tacho2.getMeasuredSpeedRPM(); // Update the current speed from tacho 2
     }
-    else if (!slice.eStop && slice.mode == OPEN_LOOP)
+    else // unknown mode
     {
-        // Update the PWM values for the motors
-        motor1Driver.write(slice.motor1PWM);
-        motor2Driver.write(slice.motor2PWM);
-    }
-    else
-    {
-        // turn off
+        // soft stop by setting brakes
+        slice.motor1Brake = true;
+        slice.motor2Brake = true;
         SLICE_DEBUG_PRINTLN(F("ERROR INVALID OPERATION MODE, ENTERED ERROR OR UNKNOWN STATE!"));
     }
 }
