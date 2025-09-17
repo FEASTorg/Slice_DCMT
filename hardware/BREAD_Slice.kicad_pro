@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 5e-06,
-          "height": 1e-05,
-          "width": 1e-05
+          "drill": 3.5,
+          "height": 3.5,
+          "width": 3.5
         },
         "silk_line_width": 0.12,
         "silk_text_italic": false,
@@ -59,7 +59,16 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "solder_mask_bridge|178288301|50650000|a9d7f275-c4dd-4562-a544-7252374f9013|0742c165-ffa2-4f0a-8912-0ea3f97e48ec",
+          "screw hole should be shorted to back body"
+        ],
+        [
+          "solder_mask_bridge|178650692|82700000|c26f388a-59af-477f-8ea7-1dede36b2e53|04310540-1a2b-4c53-996d-de794a18f1b9",
+          "screw hole should be shorted to back body"
+        ]
+      ],
       "meta": {
         "filename": "board_design_settings.json",
         "version": 2

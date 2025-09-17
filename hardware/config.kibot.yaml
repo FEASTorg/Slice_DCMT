@@ -100,8 +100,10 @@ outputs:
     layers:
       - layer: F.Cu
         suffix: F_Cu
-      - layer: GND.Cu
-        suffix: GND_Cu
+      # - layer: In1.Cu
+      #   suffix: In1_Cu
+      # - layer: In2.Cu
+      #   suffix: In2_Cu
       - layer: B.Cu
         suffix: B_Cu
       - layer: F.Paste
@@ -156,3 +158,21 @@ outputs:
       units: millimeters # millimeters or inches
       separate_files_for_front_and_back: true
       only_smd: true
+
+  - name: "board_top_png"
+    type: pcbdraw
+    dir: Images
+    options:
+      format: png
+      dpi: 300
+      output: "board_top.png"
+
+  - name: "board_bottom_png"
+    type: pcbdraw
+    dir: Images
+    options:
+      format: png
+      dpi: 300
+      bottom: true
+      mirror: true
+      output: "board_bottom.png"

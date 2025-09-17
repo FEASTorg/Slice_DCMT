@@ -1,0 +1,51 @@
+title: Slice_DCMT
+description: >
+  A FEASTorg project page for SLICE.
+baseurl: "/Slice_DCMT"
+url: "https://feastorg.github.io"
+
+remote_theme: pmarsceill/just-the-docs
+color_scheme: feast # apply feast scheme; custom theme assets pulled from main site during CI build
+
+# Aux links for the upper right navigation
+aux_links:
+  "← Return to FEASTorg":
+    - "//feastorg.github.io"
+
+# Makes Aux links open in a new tab. Default is false
+aux_links_new_tab: false
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-remote-theme
+
+markdown: kramdown
+kramdown:
+  input: GFM
+
+# Site/permalink settings useful for GitHub Pages docs
+permalink: /:path/
+
+# Don't publish these
+exclude:
+  - TODO.md
+  - kibot/index_template.md
+  - kibot/config.kibot.site.yml
+  - README.md
+
+# automatically apply layout: page to all docs/*.md
+defaults:
+  - scope:
+      path: "" # everything under docs/
+      type: "pages"
+    values:
+      layout: "page"
+
+# Just the Docs theme settings
+just_the_docs:
+  logo:
+    alt: "Slice DCMT"
+  show_nav_level: 2
+  collections:
+    enable: false
