@@ -1,11 +1,20 @@
 #ifndef HARDWARE_CONFIG_H
 #define HARDWARE_CONFIG_H
 
-// General BREAD
+// ----- General BREAD -----
 #define ESTOP 2
 #define LED_PIN 5
 
-// DCMT Specific
+// ----- DCMT Specific -----
+
+// Timing constants
+#define SERIAL_UPDATE_TIME_MS 1000
+
+// Control modes
+enum ControlModes
+{
+    OPEN_LOOP // only open loop for this firmware variant
+};
 
 // ----- Motor1 Definitions -----
 #define MOTOR1_PWM_PIN 6

@@ -14,7 +14,7 @@ void handleRequest()
     CRUMBSMessage responseMessage;
     responseMessage.typeID = TYPE_ID;                         /**< SLICE type ID */
     responseMessage.commandType = 0;                    /**< CommandType 0 for status response */
-    brakeFlag = slice.motor1Brake || slice.motor2Brake; /**< Combined brake status */
+    bool brakeFlag = slice.motor1Brake || slice.motor2Brake; /**< Combined brake status */
 
     if (slice.mode == OPEN_LOOP)
     {

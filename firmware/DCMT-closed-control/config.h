@@ -5,17 +5,6 @@
 #define I2C_ADR 14
 #define TYPE_ID 2 // SLICE type ID for DCMT!!!
 
-// timing constants
-#define SERIAL_UPDATE_TIME_MS 1000
-
-// Control modes
-enum ControlModes
-{
-    CLOSED_LOOP_POSITION,
-    CLOSED_LOOP_SPEED,
-    OPEN_LOOP
-};
-
 //  Uncomment to enable additional debugging messages:
 #define SLICE_DEBUG 1
 
