@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 // Define the I2C address for this SLICE device
-#define I2C_ADR 14
+#define I2C_ADR 25
 #define TYPE_ID 2 // SLICE type ID for DCMT!!!
 
 // Uncomment to enable additional debugging messages:
