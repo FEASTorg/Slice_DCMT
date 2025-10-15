@@ -10,6 +10,8 @@
 
 #ifdef SLICE_DEBUG
 
+#define VERSION "1.0.0"
+
 #define SLICE_DEBUG_PRINT(...) \
     Serial.print(__VA_ARGS__)
 

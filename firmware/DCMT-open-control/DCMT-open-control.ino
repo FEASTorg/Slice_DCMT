@@ -79,6 +79,9 @@ void setupSlice()
     // initialize the estop
     pinMode(ESTOP, INPUT);
     attachInterrupt(digitalPinToInterrupt(ESTOP), estopISR, CHANGE);
+
+    SLICE_DEBUG_PRINTLN(F("DCMT SLICE INITIALIZED"));
+    SLICE_DEBUG_PRINTLN(F("VERSION: " VERSION));
 }
 
 void setupDCMT()
@@ -138,7 +141,7 @@ void processEStop()
         // Disable the system if the estop is pressed
         led = CRGB::Red;
         FastLED.show();
-        
+
         motor1Driver.brake(); // Brake motor 1
         motor2Driver.brake(); // Brake motor 2
 

@@ -79,6 +79,9 @@ void setupSlice()
     // initialize the estop
     pinMode(ESTOP, INPUT);
     attachInterrupt(digitalPinToInterrupt(ESTOP), estopISR, CHANGE);
+
+    SLICE_DEBUG_PRINTLN(F("DCMT SLICE INITIALIZED"));
+    SLICE_DEBUG_PRINTLN(F("VERSION: " VERSION));
 }
 
 void setupDCMT()
