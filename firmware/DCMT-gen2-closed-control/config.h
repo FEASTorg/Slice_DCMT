@@ -5,9 +5,9 @@
 #define I2C_ADR 14
 #define TYPE_ID 2 // SLICE type ID for DCMT!!!
 
-#define VERSION "1.0.0"
+#define VERSION "1.0.0" // firmware version, update when making changes
 
-//  Uncomment to enable additional debugging messages:
+// Uncomment to enable additional debugging messages:
 #define SLICE_DEBUG 1
 
 #ifdef SLICE_DEBUG
