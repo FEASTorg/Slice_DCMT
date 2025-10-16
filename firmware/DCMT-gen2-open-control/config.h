@@ -5,10 +5,10 @@
 #define I2C_ADR 25
 #define TYPE_ID 2 // SLICE type ID for DCMT!!!
 
+#define VERSION "1.0.0"
+
 // Uncomment to enable additional debugging messages:
 #define SLICE_DEBUG 1
-
-#define VERSION "1.0.0"
 
 #ifdef SLICE_DEBUG
 
