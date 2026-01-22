@@ -1,3 +1,3 @@
 # Docs
 
-This directory holds all the docs.
+This directory contains all the docs.
