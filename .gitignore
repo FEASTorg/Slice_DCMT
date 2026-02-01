@@ -19,3 +19,5 @@ fp-lib-table
 *.log
 *.bak
 *.swp
+
+*-backups/
