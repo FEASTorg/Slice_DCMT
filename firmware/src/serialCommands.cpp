@@ -16,39 +16,25 @@ void serialCommands()
     }
     else if (command.startsWith("M1PWM="))
     {
-        if (slice.mode == OPEN_LOOP)
-        {
-            float v = command.substring(6).toFloat();
-            if (v < -255)
-                v = -255;
-            if (v > 255)
-                v = 255;
-            slice.motor1PWM = v;
-            Serial.print(F("M1PWM-> "));
-            Serial.println(slice.motor1PWM);
-        }
-        else
-        {
-            Serial.println(F("Motor1 PWM can only be set in OPEN_LOOP mode"));
-        }
+        long v = command.substring(6).toInt();
+        if (v < -255)
+            v = -255;
+        if (v > 255)
+            v = 255;
+        slice.motor1PWM = (int16_t)v;
+        Serial.print(F("M1PWM-> "));
+        Serial.println(slice.motor1PWM);
     }
     else if (command.startsWith("M2PWM="))
     {
-        if (slice.mode == OPEN_LOOP)
-        {
-            float v = command.substring(6).toFloat();
-            if (v < -255)
-                v = -255;
-            if (v > 255)
-                v = 255;
-            slice.motor2PWM = v;
-            Serial.print(F("M2PWM-> "));
-            Serial.println(slice.motor2PWM);
-        }
-        else
-        {
-            Serial.println(F("Motor2 PWM can only be set in OPEN_LOOP mode"));
-        }
+        long v = command.substring(6).toInt();
+        if (v < -255)
+            v = -255;
+        if (v > 255)
+            v = 255;
+        slice.motor2PWM = (int16_t)v;
+        Serial.print(F("M2PWM-> "));
+        Serial.println(slice.motor2PWM);
     }
     else if (command == "BRAKE1=1")
     {
@@ -72,8 +58,7 @@ void serialCommands()
     }
     else if (command == "READ")
     {
-        Serial.print(F("Mode: OPEN_LOOP"));
-        Serial.print(F(", M1PWM:"));
+        Serial.print(F("M1PWM:"));
         Serial.print(slice.motor1PWM);
         Serial.print(F(", M2PWM:"));
         Serial.print(slice.motor2PWM);

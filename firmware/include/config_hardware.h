@@ -10,12 +10,6 @@
 // Timing constants
 #define SERIAL_UPDATE_TIME_MS 1000
 
-// Control modes
-enum ControlModes
-{
-    OPEN_LOOP // only open loop for this firmware variant
-};
-
 // ----- Motor1 Definitions -----
 #define MOTOR1_PWM_PIN 6
 #define MOTOR1_DIR_PIN 5
