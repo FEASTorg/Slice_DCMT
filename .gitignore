@@ -21,3 +21,5 @@ fp-lib-table
 *.swp
 
 *-backups/
+
+working/
