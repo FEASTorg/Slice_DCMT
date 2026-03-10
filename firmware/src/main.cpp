@@ -11,6 +11,10 @@
 #include <LMD18200.h>
 #include <dcmt_ops.h>
 
+#if DCMT_FEATURE_CLOSED_LOOP
+#include <Encoder.h>
+#endif
+
 #include "config.h"
 #include "config_hardware.h"
 #include "globals.h"
@@ -26,9 +30,107 @@ CRGB led;
 LMD18200 motor1Driver(MOTOR1_PWM_PIN, MOTOR1_DIR_PIN, MOTOR1_BRAKE_PIN, MOTOR1_CSENSE_PIN);
 LMD18200 motor2Driver(MOTOR2_PWM_PIN, MOTOR2_DIR_PIN, MOTOR2_BRAKE_PIN, MOTOR2_CSENSE_PIN);
 
+#if DCMT_FEATURE_CLOSED_LOOP
+Encoder motor1Encoder(MOTOR1_ENCODER_PIN1, MOTOR1_ENCODER_PIN2);
+Encoder motor2Encoder(MOTOR2_ENCODER_PIN1, MOTOR2_ENCODER_PIN2);
+static long lastSpeedPos1 = 0;
+static long lastSpeedPos2 = 0;
+#endif
+
 // Shared state
 DCMT_SLICE slice;
 Timing timing = {0};
+
+static int16_t clamp_pwm(long v)
+{
+    if (v < -255)
+        return -255;
+    if (v > 255)
+        return 255;
+    return static_cast<int16_t>(v);
+}
+
+static int16_t clamp_i16(long v)
+{
+    if (v < -32768)
+        return -32768;
+    if (v > 32767)
+        return 32767;
+    return static_cast<int16_t>(v);
+}
+
+#if DCMT_FEATURE_CLOSED_LOOP
+static int16_t pid_step(const PIDTunings &pid, PIDState &state, float error, float dt_s)
+{
+    if (dt_s <= 0.0f)
+        dt_s = 0.02f;
+
+    state.integral += error * dt_s;
+    if (state.integral > 600.0f)
+        state.integral = 600.0f;
+    if (state.integral < -600.0f)
+        state.integral = -600.0f;
+
+    const float derivative = (error - state.previousError) / dt_s;
+    state.previousError = error;
+
+    const float output = pid.kp * error + pid.ki * state.integral + pid.kd * derivative;
+    return clamp_pwm(static_cast<long>(output));
+}
+
+static void update_speed_measurement(uint32_t now_ms)
+{
+    if ((now_ms - timing.lastSpeedSample) < SPEED_SAMPLE_TIME_MS)
+        return;
+
+    const uint32_t dt_ms = static_cast<uint32_t>(now_ms - timing.lastSpeedSample);
+    const long pos1 = motor1Encoder.read();
+    const long pos2 = motor2Encoder.read();
+
+    const long d1 = pos1 - lastSpeedPos1;
+    const long d2 = pos2 - lastSpeedPos2;
+
+    slice.motor1Speed = clamp_i16((d1 * 1000L) / static_cast<long>(dt_ms));
+    slice.motor2Speed = clamp_i16((d2 * 1000L) / static_cast<long>(dt_ms));
+
+    lastSpeedPos1 = pos1;
+    lastSpeedPos2 = pos2;
+    timing.lastSpeedSample = now_ms;
+}
+
+static void run_closed_loop(uint32_t now_ms)
+{
+    if ((now_ms - timing.lastControlUpdate) < CONTROL_UPDATE_TIME_MS)
+        return;
+
+    const uint32_t dt_ms = static_cast<uint32_t>(now_ms - timing.lastControlUpdate);
+    const float dt_s = static_cast<float>(dt_ms) / 1000.0f;
+
+    const long pos1 = motor1Encoder.read();
+    const long pos2 = motor2Encoder.read();
+    slice.motor1Position = clamp_i16(pos1);
+    slice.motor2Position = clamp_i16(pos2);
+
+    update_speed_measurement(now_ms);
+
+    if (slice.mode == CLOSED_LOOP_POSITION)
+    {
+        const float err1 = static_cast<float>(slice.motor1PositionSetpoint - slice.motor1Position);
+        const float err2 = static_cast<float>(slice.motor2PositionSetpoint - slice.motor2Position);
+        slice.motor1PWM = pid_step(slice.posPid1, slice.posState1, err1, dt_s);
+        slice.motor2PWM = pid_step(slice.posPid2, slice.posState2, err2, dt_s);
+    }
+    else if (slice.mode == CLOSED_LOOP_SPEED)
+    {
+        const float err1 = static_cast<float>(slice.motor1SpeedSetpoint - slice.motor1Speed);
+        const float err2 = static_cast<float>(slice.motor2SpeedSetpoint - slice.motor2Speed);
+        slice.motor1PWM = pid_step(slice.speedPid1, slice.speedState1, err1, dt_s);
+        slice.motor2PWM = pid_step(slice.speedPid2, slice.speedState2, err2, dt_s);
+    }
+
+    timing.lastControlUpdate = now_ms;
+}
+#endif
 
 void setup()
 {
@@ -58,12 +160,27 @@ void setupSlice()
     rc = crumbs_register_handler(&ctx, DCMT_OP_SET_OPEN_LOOP, handler_set_open_loop, nullptr);
     if (rc != 0)
         SLICE_DEBUG_PRINTLN(F("CRUMBS: Failed to register DCMT_OP_SET_OPEN_LOOP"));
+
     rc = crumbs_register_handler(&ctx, DCMT_OP_SET_BRAKE, handler_set_brake, nullptr);
     if (rc != 0)
         SLICE_DEBUG_PRINTLN(F("CRUMBS: Failed to register DCMT_OP_SET_BRAKE"));
+
+    rc = crumbs_register_handler(&ctx, DCMT_OP_SET_MODE, handler_set_mode, nullptr);
+    if (rc != 0)
+        SLICE_DEBUG_PRINTLN(F("CRUMBS: Failed to register DCMT_OP_SET_MODE"));
+
+    rc = crumbs_register_handler(&ctx, DCMT_OP_SET_SETPOINT, handler_set_setpoint, nullptr);
+    if (rc != 0)
+        SLICE_DEBUG_PRINTLN(F("CRUMBS: Failed to register DCMT_OP_SET_SETPOINT"));
+
+    rc = crumbs_register_handler(&ctx, DCMT_OP_SET_PID, handler_set_pid, nullptr);
+    if (rc != 0)
+        SLICE_DEBUG_PRINTLN(F("CRUMBS: Failed to register DCMT_OP_SET_PID"));
+
     rc = crumbs_register_reply_handler(&ctx, 0x00, reply_version, nullptr);
     if (rc != 0)
         SLICE_DEBUG_PRINTLN(F("CRUMBS: Failed to register version reply handler"));
+
     rc = crumbs_register_reply_handler(&ctx, DCMT_OP_GET_STATE, reply_get_state, nullptr);
     if (rc != 0)
         SLICE_DEBUG_PRINTLN(F("CRUMBS: Failed to register DCMT_OP_GET_STATE reply handler"));
@@ -80,6 +197,16 @@ void setupSlice()
 
     SLICE_DEBUG_PRINTLN(F("DCMT SLICE INITIALIZED"));
     SLICE_DEBUG_PRINTLN(F("VERSION: " VERSION));
+#if (DCMT_HW_GEN == 1)
+    SLICE_DEBUG_PRINTLN(F("HW Profile: Gen1"));
+#else
+    SLICE_DEBUG_PRINTLN(F("HW Profile: Gen2"));
+#endif
+#if DCMT_FEATURE_CLOSED_LOOP
+    SLICE_DEBUG_PRINTLN(F("Control Profile: Closed-capable"));
+#else
+    SLICE_DEBUG_PRINTLN(F("Control Profile: Open-loop only"));
+#endif
 }
 
 void setupDCMT()
@@ -88,6 +215,14 @@ void setupDCMT()
     motor2Driver.begin();
     motor1Driver.write(0);
     motor2Driver.write(0);
+
+    timing.lastSerialPrint = millis();
+    timing.lastControlUpdate = millis();
+#if DCMT_FEATURE_CLOSED_LOOP
+    timing.lastSpeedSample = millis();
+    lastSpeedPos1 = motor1Encoder.read();
+    lastSpeedPos2 = motor2Encoder.read();
+#endif
 }
 
 // Poll/ISR/processing
@@ -95,16 +230,19 @@ void pollEStop()
 {
     if (estopTriggered)
     {
-        led = CRGB::Red;
-        FastLED.show();
         processEStop();
         estopTriggered = false;
+    }
+
+    if (slice.eStop)
+    {
+        led = CRGB::Red;
     }
     else
     {
         led = CRGB::Green;
-        FastLED.show();
     }
+    FastLED.show();
 }
 
 void estopISR()
@@ -116,17 +254,15 @@ void processEStop()
 {
     if (digitalRead(ESTOP) == HIGH)
     {
-        led = CRGB::Red;
-        FastLED.show();
         motor1Driver.brake();
         motor2Driver.brake();
         slice.eStop = true;
+        slice.motor1PWM = 0;
+        slice.motor2PWM = 0;
         SLICE_DEBUG_PRINTLN(F("ESTOP PRESSED!"));
     }
     else
     {
-        led = CRGB::Green;
-        FastLED.show();
         slice.eStop = false;
         SLICE_DEBUG_PRINTLN(F("ESTOP RELEASED!"));
     }
@@ -134,31 +270,43 @@ void processEStop()
 
 void motorControlLogic()
 {
-    if (slice.motor1Brake || slice.motor2Brake)
+    if (slice.eStop)
     {
-        if (slice.motor1Brake)
-        {
-            slice.motor1PWM = 0;
-            motor1Driver.write(0);
-            motor1Driver.brake();
-        }
-        if (slice.motor2Brake)
-        {
-            slice.motor2PWM = 0;
-            motor2Driver.write(0);
-            motor2Driver.brake();
-        }
+        motor1Driver.write(0);
+        motor2Driver.write(0);
+        motor1Driver.brake();
+        motor2Driver.brake();
+        return;
     }
-    else if (!slice.eStop)
+
+#if DCMT_FEATURE_CLOSED_LOOP
+    if (slice.mode == CLOSED_LOOP_POSITION || slice.mode == CLOSED_LOOP_SPEED)
     {
-        motor1Driver.write(slice.motor1PWM);
-        motor2Driver.write(slice.motor2PWM);
+        run_closed_loop(static_cast<uint32_t>(millis()));
+    }
+#else
+    slice.mode = OPEN_LOOP;
+#endif
+
+    if (slice.motor1Brake)
+    {
+        slice.motor1PWM = 0;
+        motor1Driver.write(0);
+        motor1Driver.brake();
     }
     else
     {
-        // unknown/invalid -> soft stop
-        slice.motor1Brake = true;
-        slice.motor2Brake = true;
-        SLICE_DEBUG_PRINTLN(F("ERROR INVALID OPERATION MODE, ENTERED ERROR OR UNKNOWN STATE!"));
+        motor1Driver.write(clamp_pwm(slice.motor1PWM));
+    }
+
+    if (slice.motor2Brake)
+    {
+        slice.motor2PWM = 0;
+        motor2Driver.write(0);
+        motor2Driver.brake();
+    }
+    else
+    {
+        motor2Driver.write(clamp_pwm(slice.motor2PWM));
     }
 }

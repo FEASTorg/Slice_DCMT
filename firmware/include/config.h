@@ -1,9 +1,24 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// Define the I2C address for this SLICE device
+// Build profile defaults (overridden by PlatformIO env build_flags)
+#ifndef DCMT_HW_GEN
+#define DCMT_HW_GEN 1
+#endif
+
+#ifndef DCMT_FEATURE_CLOSED_LOOP
+#define DCMT_FEATURE_CLOSED_LOOP 0
+#endif
+
+#if (DCMT_HW_GEN == 1)
 #define I2C_ADR 21
-#define TYPE_ID 2 // SLICE type ID for DCMT!!!
+#elif (DCMT_HW_GEN == 2)
+#define I2C_ADR 25
+#else
+#error "Unsupported DCMT_HW_GEN value"
+#endif
+
+#define TYPE_ID 2 // SLICE type ID for DCMT
 
 #define VERSION "1.0.0" // firmware version, update when making changes
 
