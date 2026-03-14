@@ -213,3 +213,20 @@ void reply_get_state(crumbs_context_t *ctx, crumbs_message_t *reply, void *user_
     crumbs_msg_add_u8(reply, brakes);
     crumbs_msg_add_u8(reply, slice.eStop ? 1 : 0);
 }
+
+void reply_get_caps(crumbs_context_t *ctx, crumbs_message_t *reply, void *user_data)
+{
+    uint8_t level = DCMT_CAP_LEVEL_1;
+    uint32_t flags = DCMT_CAP_BASELINE_FLAGS;
+    (void)ctx;
+    (void)user_data;
+
+#if DCMT_FEATURE_CLOSED_LOOP
+    level = DCMT_CAP_LEVEL_2;
+    flags |= DCMT_CAP_CLOSED_LOOP_POSITION;
+    flags |= DCMT_CAP_CLOSED_LOOP_SPEED;
+    flags |= DCMT_CAP_PID_TUNING;
+#endif
+
+    (void)bread_caps_build_reply(reply, DCMT_TYPE_ID, level, flags);
+}
