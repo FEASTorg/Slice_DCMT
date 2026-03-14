@@ -18,8 +18,6 @@
 #error "Unsupported DCMT_HW_GEN value"
 #endif
 
-#define TYPE_ID 2 // SLICE type ID for DCMT
-
 #define VERSION "1.0.0" // firmware version, update when making changes
 
 // Uncomment to enable additional debugging messages:
