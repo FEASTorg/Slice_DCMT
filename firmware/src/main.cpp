@@ -9,7 +9,7 @@
 #include <crumbs.h>
 #include <crumbs_arduino.h>
 #include <LMD18200.h>
-#include <dcmt_ops.h>
+#include <bread/dcmt_ops.h>
 
 #if DCMT_FEATURE_CLOSED_LOOP
 #include <Encoder.h>
