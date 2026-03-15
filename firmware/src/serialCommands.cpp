@@ -25,7 +25,6 @@ void serialCommands()
 
     if (command.startsWith("MODE="))
     {
-#if DCMT_FEATURE_CLOSED_LOOP
         String mode = command.substring(5);
         mode.trim();
         mode.toUpperCase();
@@ -34,11 +33,17 @@ void serialCommands()
             slice.mode = OPEN_LOOP;
         else if (mode == "POS")
             slice.mode = CLOSED_LOOP_POSITION;
+#if DCMT_ENABLE_SPEED_LOOP
         else if (mode == "SPEED")
             slice.mode = CLOSED_LOOP_SPEED;
+#endif
         else
         {
+#if DCMT_ENABLE_SPEED_LOOP
             Serial.println(F("MODE options: OPEN | POS | SPEED"));
+#else
+            Serial.println(F("MODE options: OPEN | POS"));
+#endif
             return;
         }
 
@@ -47,10 +52,9 @@ void serialCommands()
             Serial.println(F("OPEN_LOOP"));
         else if (slice.mode == CLOSED_LOOP_POSITION)
             Serial.println(F("CLOSED_LOOP_POSITION"));
+#if DCMT_ENABLE_SPEED_LOOP
         else
             Serial.println(F("CLOSED_LOOP_SPEED"));
-#else
-        Serial.println(F("MODE unavailable in open-loop-only variants"));
 #endif
     }
     else if (command.startsWith("M1PWM="))
@@ -87,7 +91,6 @@ void serialCommands()
         Serial.print(F("M2PWM-> "));
         Serial.println(slice.motor2PWM);
     }
-#if DCMT_FEATURE_CLOSED_LOOP
     else if (command.startsWith("M1POS="))
     {
         slice.motor1PositionSetpoint = (int16_t)command.substring(6).toInt();
@@ -99,18 +102,6 @@ void serialCommands()
         slice.motor2PositionSetpoint = (int16_t)command.substring(6).toInt();
         Serial.print(F("M2POS-> "));
         Serial.println(slice.motor2PositionSetpoint);
-    }
-    else if (command.startsWith("M1SPEED="))
-    {
-        slice.motor1SpeedSetpoint = (int16_t)command.substring(8).toInt();
-        Serial.print(F("M1SPEED-> "));
-        Serial.println(slice.motor1SpeedSetpoint);
-    }
-    else if (command.startsWith("M2SPEED="))
-    {
-        slice.motor2SpeedSetpoint = (int16_t)command.substring(8).toInt();
-        Serial.print(F("M2SPEED-> "));
-        Serial.println(slice.motor2SpeedSetpoint);
     }
     else if (command.startsWith("PIDPOS="))
     {
@@ -125,6 +116,19 @@ void serialCommands()
         slice.posPid1 = {kp, ki, kd};
         slice.posPid2 = {kp, ki, kd};
         Serial.println(F("Position PID updated"));
+    }
+#if DCMT_ENABLE_SPEED_LOOP
+    else if (command.startsWith("M1SPEED="))
+    {
+        slice.motor1SpeedSetpoint = (int16_t)command.substring(8).toInt();
+        Serial.print(F("M1SPEED-> "));
+        Serial.println(slice.motor1SpeedSetpoint);
+    }
+    else if (command.startsWith("M2SPEED="))
+    {
+        slice.motor2SpeedSetpoint = (int16_t)command.substring(8).toInt();
+        Serial.print(F("M2SPEED-> "));
+        Serial.println(slice.motor2SpeedSetpoint);
     }
     else if (command.startsWith("PIDSPEED="))
     {
@@ -168,14 +172,18 @@ void serialCommands()
             Serial.print(F("OPEN"));
         else if (slice.mode == CLOSED_LOOP_POSITION)
             Serial.print(F("POS"));
+#if DCMT_ENABLE_SPEED_LOOP
         else
             Serial.print(F("SPEED"));
+#else
+        else
+            Serial.print(F("UNKNOWN"));
+#endif
 
         Serial.print(F(", M1PWM:"));
         Serial.print(slice.motor1PWM);
         Serial.print(F(", M2PWM:"));
         Serial.print(slice.motor2PWM);
-#if DCMT_FEATURE_CLOSED_LOOP
         Serial.print(F(", M1POS_SP:"));
         Serial.print(slice.motor1PositionSetpoint);
         Serial.print(F(", M2POS_SP:"));
@@ -184,6 +192,7 @@ void serialCommands()
         Serial.print(slice.motor1Position);
         Serial.print(F(", M2POS:"));
         Serial.print(slice.motor2Position);
+#if DCMT_ENABLE_SPEED_LOOP
         Serial.print(F(", M1SPD_SP:"));
         Serial.print(slice.motor1SpeedSetpoint);
         Serial.print(F(", M2SPD_SP:"));
@@ -203,8 +212,8 @@ void serialCommands()
     else
     {
         Serial.println(F("Invalid command."));
-        Serial.println(F("Open-loop: MODE=OPEN, M1PWM=, M2PWM=, BRAKE1=0/1, BRAKE2=0/1, READ"));
-#if DCMT_FEATURE_CLOSED_LOOP
+        Serial.println(F("Open/Pos: MODE=OPEN|POS, M1PWM=, M2PWM=, M1POS=, M2POS=, PIDPOS=kp,ki,kd, BRAKE1=0/1, BRAKE2=0/1, READ"));
+#if DCMT_ENABLE_SPEED_LOOP
         Serial.println(F("Closed-loop: MODE=POS|SPEED, M1POS=, M2POS=, M1SPEED=, M2SPEED=, PIDPOS=kp,ki,kd, PIDSPEED=kp,ki,kd"));
 #endif
     }

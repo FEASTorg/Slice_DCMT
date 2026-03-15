@@ -10,10 +10,7 @@
 #include <crumbs_arduino.h>
 #include <LMD18200.h>
 #include <bread/dcmt_ops.h>
-
-#if DCMT_FEATURE_CLOSED_LOOP
 #include <Encoder.h>
-#endif
 
 #include "config.h"
 #include "config_hardware.h"
@@ -30,12 +27,10 @@ CRGB led;
 LMD18200 motor1Driver(MOTOR1_PWM_PIN, MOTOR1_DIR_PIN, MOTOR1_BRAKE_PIN, MOTOR1_CSENSE_PIN);
 LMD18200 motor2Driver(MOTOR2_PWM_PIN, MOTOR2_DIR_PIN, MOTOR2_BRAKE_PIN, MOTOR2_CSENSE_PIN);
 
-#if DCMT_FEATURE_CLOSED_LOOP
 Encoder motor1Encoder(MOTOR1_ENCODER_PIN1, MOTOR1_ENCODER_PIN2);
 Encoder motor2Encoder(MOTOR2_ENCODER_PIN1, MOTOR2_ENCODER_PIN2);
 static long lastSpeedPos1 = 0;
 static long lastSpeedPos2 = 0;
-#endif
 
 // Shared state
 DCMT_SLICE slice;
@@ -59,7 +54,6 @@ static int16_t clamp_i16(long v)
     return static_cast<int16_t>(v);
 }
 
-#if DCMT_FEATURE_CLOSED_LOOP
 static int16_t pid_step(const PIDTunings &pid, PIDState &state, float error, float dt_s)
 {
     if (dt_s <= 0.0f)
@@ -120,6 +114,7 @@ static void run_closed_loop(uint32_t now_ms)
         slice.motor1PWM = pid_step(slice.posPid1, slice.posState1, err1, dt_s);
         slice.motor2PWM = pid_step(slice.posPid2, slice.posState2, err2, dt_s);
     }
+#if DCMT_ENABLE_SPEED_LOOP
     else if (slice.mode == CLOSED_LOOP_SPEED)
     {
         const float err1 = static_cast<float>(slice.motor1SpeedSetpoint - slice.motor1Speed);
@@ -127,10 +122,10 @@ static void run_closed_loop(uint32_t now_ms)
         slice.motor1PWM = pid_step(slice.speedPid1, slice.speedState1, err1, dt_s);
         slice.motor2PWM = pid_step(slice.speedPid2, slice.speedState2, err2, dt_s);
     }
+#endif
 
     timing.lastControlUpdate = now_ms;
 }
-#endif
 
 void setup()
 {
@@ -206,10 +201,11 @@ void setupSlice()
 #else
     SLICE_DEBUG_PRINTLN(F("HW Profile: Gen2"));
 #endif
-#if DCMT_FEATURE_CLOSED_LOOP
-    SLICE_DEBUG_PRINTLN(F("Control Profile: Closed-capable"));
+    SLICE_DEBUG_PRINTLN(F("Control Profile: Open + Closed Position"));
+#if DCMT_ENABLE_SPEED_LOOP
+    SLICE_DEBUG_PRINTLN(F("Speed Profile: Enabled"));
 #else
-    SLICE_DEBUG_PRINTLN(F("Control Profile: Open-loop only"));
+    SLICE_DEBUG_PRINTLN(F("Speed Profile: Disabled"));
 #endif
 }
 
@@ -222,11 +218,9 @@ void setupDCMT()
 
     timing.lastSerialPrint = millis();
     timing.lastControlUpdate = millis();
-#if DCMT_FEATURE_CLOSED_LOOP
     timing.lastSpeedSample = millis();
     lastSpeedPos1 = motor1Encoder.read();
     lastSpeedPos2 = motor2Encoder.read();
-#endif
 }
 
 // Poll/ISR/processing
@@ -283,14 +277,14 @@ void motorControlLogic()
         return;
     }
 
-#if DCMT_FEATURE_CLOSED_LOOP
-    if (slice.mode == CLOSED_LOOP_POSITION || slice.mode == CLOSED_LOOP_SPEED)
+    if (slice.mode == CLOSED_LOOP_POSITION
+#if DCMT_ENABLE_SPEED_LOOP
+        || slice.mode == CLOSED_LOOP_SPEED
+#endif
+    )
     {
         run_closed_loop(static_cast<uint32_t>(millis()));
     }
-#else
-    slice.mode = OPEN_LOOP;
-#endif
 
     if (slice.motor1Brake)
     {

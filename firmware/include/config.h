@@ -6,8 +6,16 @@
 #define DCMT_HW_GEN 1
 #endif
 
-#ifndef DCMT_FEATURE_CLOSED_LOOP
-#define DCMT_FEATURE_CLOSED_LOOP 0
+// Speed-loop default is based on MCU family:
+// - classic Nano (AVR) -> disabled by default
+// - Nano Every (megaAVR) -> enabled by default
+// Override with build flag: -DDCMT_ENABLE_SPEED_LOOP=0/1
+#ifndef DCMT_ENABLE_SPEED_LOOP
+#if defined(ARDUINO_ARCH_MEGAAVR) || defined(ARDUINO_AVR_NANO_EVERY)
+#define DCMT_ENABLE_SPEED_LOOP 1
+#else
+#define DCMT_ENABLE_SPEED_LOOP 0
+#endif
 #endif
 
 // Bus address is independent of hardware generation.

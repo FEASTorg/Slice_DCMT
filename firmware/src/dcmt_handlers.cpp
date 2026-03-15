@@ -8,7 +8,13 @@
 
 static bool is_valid_mode(uint8_t mode)
 {
-    return (mode == OPEN_LOOP) || (mode == CLOSED_LOOP_POSITION) || (mode == CLOSED_LOOP_SPEED);
+    if (mode == OPEN_LOOP || mode == CLOSED_LOOP_POSITION)
+        return true;
+#if DCMT_ENABLE_SPEED_LOOP
+    if (mode == CLOSED_LOOP_SPEED)
+        return true;
+#endif
+    return false;
 }
 
 void handler_set_open_loop(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data, uint8_t data_len, void *user_data)
@@ -24,10 +30,8 @@ void handler_set_open_loop(crumbs_context_t *ctx, uint8_t opcode, const uint8_t 
     if (crumbs_msg_read_i16(data, data_len, 2, &m2) != 0)
         return;
 
-#if DCMT_FEATURE_CLOSED_LOOP
     if (slice.mode != OPEN_LOOP)
         return;
-#endif
 
     slice.motor1PWM = constrain(m1, -255, 255);
     slice.motor2PWM = constrain(m2, -255, 255);
@@ -60,7 +64,6 @@ void handler_set_mode(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data
     if (crumbs_msg_read_u8(data, data_len, 0, &mode) != 0)
         return;
 
-#if DCMT_FEATURE_CLOSED_LOOP
     if (!is_valid_mode(mode))
         return;
     slice.mode = static_cast<ControlModes>(mode);
@@ -73,10 +76,6 @@ void handler_set_mode(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data
         slice.speedState1 = {};
         slice.speedState2 = {};
     }
-#else
-    (void)mode;
-    slice.mode = OPEN_LOOP;
-#endif
 }
 
 void handler_set_setpoint(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data, uint8_t data_len, void *user_data)
@@ -92,21 +91,18 @@ void handler_set_setpoint(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *
     if (crumbs_msg_read_i16(data, data_len, 2, &t2) != 0)
         return;
 
-#if DCMT_FEATURE_CLOSED_LOOP
     if (slice.mode == CLOSED_LOOP_POSITION)
     {
         slice.motor1PositionSetpoint = t1;
         slice.motor2PositionSetpoint = t2;
         return;
     }
+#if DCMT_ENABLE_SPEED_LOOP
     if (slice.mode == CLOSED_LOOP_SPEED)
     {
         slice.motor1SpeedSetpoint = t1;
         slice.motor2SpeedSetpoint = t2;
     }
-#else
-    (void)t1;
-    (void)t2;
 #endif
 }
 
@@ -135,7 +131,6 @@ void handler_set_pid(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data,
     if (crumbs_msg_read_u8(data, data_len, 5, &kd2_x10) != 0)
         return;
 
-#if DCMT_FEATURE_CLOSED_LOOP
     const float kp1 = static_cast<float>(kp1_x10) / 10.0f;
     const float ki1 = static_cast<float>(ki1_x10) / 10.0f;
     const float kd1 = static_cast<float>(kd1_x10) / 10.0f;
@@ -149,18 +144,12 @@ void handler_set_pid(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data,
         slice.posPid2 = {kp2, ki2, kd2};
         return;
     }
+#if DCMT_ENABLE_SPEED_LOOP
     if (slice.mode == CLOSED_LOOP_SPEED)
     {
         slice.speedPid1 = {kp1, ki1, kd1};
         slice.speedPid2 = {kp2, ki2, kd2};
     }
-#else
-    (void)kp1_x10;
-    (void)ki1_x10;
-    (void)kd1_x10;
-    (void)kp2_x10;
-    (void)ki2_x10;
-    (void)kd2_x10;
 #endif
 }
 
@@ -185,7 +174,6 @@ void reply_get_state(crumbs_context_t *ctx, crumbs_message_t *reply, void *user_
     crumbs_msg_init(reply, DCMT_TYPE_ID, DCMT_OP_GET_STATE);
     crumbs_msg_add_u8(reply, static_cast<uint8_t>(slice.mode));
 
-#if DCMT_FEATURE_CLOSED_LOOP
     if (slice.mode == CLOSED_LOOP_POSITION)
     {
         crumbs_msg_add_i16(reply, slice.motor1PositionSetpoint);
@@ -196,6 +184,7 @@ void reply_get_state(crumbs_context_t *ctx, crumbs_message_t *reply, void *user_
         crumbs_msg_add_u8(reply, slice.eStop ? 1 : 0);
         return;
     }
+#if DCMT_ENABLE_SPEED_LOOP
     if (slice.mode == CLOSED_LOOP_SPEED)
     {
         crumbs_msg_add_i16(reply, slice.motor1SpeedSetpoint);
@@ -216,16 +205,14 @@ void reply_get_state(crumbs_context_t *ctx, crumbs_message_t *reply, void *user_
 
 void reply_get_caps(crumbs_context_t *ctx, crumbs_message_t *reply, void *user_data)
 {
-    uint8_t level = DCMT_CAP_LEVEL_1;
-    uint32_t flags = DCMT_CAP_BASELINE_FLAGS;
+    uint8_t level = DCMT_CAP_LEVEL_2;
+    uint32_t flags = DCMT_CAP_BASELINE_FLAGS | DCMT_CAP_CLOSED_LOOP_POSITION | DCMT_CAP_PID_TUNING;
     (void)ctx;
     (void)user_data;
 
-#if DCMT_FEATURE_CLOSED_LOOP
-    level = DCMT_CAP_LEVEL_2;
-    flags |= DCMT_CAP_CLOSED_LOOP_POSITION;
+#if DCMT_ENABLE_SPEED_LOOP
+    level = DCMT_CAP_LEVEL_3;
     flags |= DCMT_CAP_CLOSED_LOOP_SPEED;
-    flags |= DCMT_CAP_PID_TUNING;
 #endif
 
     (void)bread_caps_build_reply(reply, DCMT_TYPE_ID, level, flags);

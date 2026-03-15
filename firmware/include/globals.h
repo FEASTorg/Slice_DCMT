@@ -38,7 +38,6 @@ struct DCMT_SLICE
     bool motor2Brake = false;
     bool eStop = false;
 
-#if DCMT_FEATURE_CLOSED_LOOP
     int16_t motor1PositionSetpoint = 0;
     int16_t motor2PositionSetpoint = 0;
     int16_t motor1Position = 0;
@@ -56,16 +55,13 @@ struct DCMT_SLICE
     PIDState posState2 = {};
     PIDState speedState1 = {};
     PIDState speedState2 = {};
-#endif
 };
 
 struct Timing
 {
     long lastSerialPrint;
     long lastControlUpdate;
-#if DCMT_FEATURE_CLOSED_LOOP
     long lastSpeedSample;
-#endif
 };
 
 // ---- Extern globals (defined in main.cpp) ----
