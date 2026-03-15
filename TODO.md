@@ -1,32 +1,38 @@
 # TODO
 
-## Deferred: Replace Temporary Closed-Loop Runtime with DCMotorServo Stack
+## Closed-Loop Validation (DCMotorServo Backend)
 
-Status: Deferred for later task.
+Status: Runtime migration implemented; bench validation pending.
 
-### Why
+### Current Implementation
 
-- Current firmware uses an in-firmware PID implementation (`Encoder` + custom control loop).
-- Speed-loop availability is currently gated by MCU performance profile (default enabled on Nano Every, disabled on classic Nano).
-- Original closed-loop behavior used `DCMotorServo` + `DCMotorTacho`.
-- We want eventual parity with the legacy closed-loop architecture and tuning model.
+- Firmware now uses `DCMotorServo` + `DCMotorTacho` backend (archive-style control stack).
+- Archive-proven CPR is applied (`MOTOR1_CPR` / `MOTOR2_CPR` = `798`).
+- Speed-loop remains capability-gated by MCU profile (`DCMT_ENABLE_SPEED_LOOP` default logic).
+- Wire contract remains unchanged (`bread-crumbs-contracts` DCMT ops + caps).
 
-### Future Work Items
+### Remaining Work Items
 
-1. Add `DCMotorServo` and `DCMotorTacho` dependencies in `firmware/platformio.ini`.
-2. Replace custom closed-loop runtime in `firmware/src/main.cpp` with library-backed control objects.
-3. Map CRUMBS closed-loop commands to library APIs:
-   - mode switch
-   - setpoint updates
-   - PID tuning updates
-4. Validate telemetry reply format in `firmware/src/dcmt_handlers.cpp` against expected controller contract.
-5. Re-run bench tests for:
+1. Build validation across environments:
+   - `gen1_nano`
+   - `gen2_nano`
+   - `gen1_nanoevery`
+   - `gen2_nanoevery`
+2. Bench test and tune as needed for:
    - position control stability
    - speed control stability
    - brake/estop safety behavior during closed-loop operation
+3. Controller protocol regression checks:
+   - `version`
+   - `caps`
+   - `state`
+   - `mode/setpoint/pid`
+4. Confirm caps/behavior alignment:
+   - Level 2: pos closed-loop available
+   - Level 3: speed closed-loop available
 
 ### Acceptance Criteria
 
-1. `gen1_nano`, `gen2_nano`, `gen1_nanoevery`, and `gen2_nanoevery` compile and run using `DCMotorServo`/`DCMotorTacho` (no custom PID loop active).
-2. Closed-loop command/telemetry behavior matches intended Gen2 contract.
-3. Bench validation passes for position, speed, and safety paths.
+1. All four envs compile with no migration regressions.
+2. Closed-loop command/telemetry behavior matches current `dcmt_ops.h` contract.
+3. Bench validation passes for position, speed (where enabled), and safety paths.

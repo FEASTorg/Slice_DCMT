@@ -22,12 +22,6 @@ struct PIDTunings
     float kd = 0.0f;
 };
 
-struct PIDState
-{
-    float integral = 0.0f;
-    float previousError = 0.0f;
-};
-
 // ---- Shared state structs ----
 struct DCMT_SLICE
 {
@@ -47,21 +41,15 @@ struct DCMT_SLICE
     int16_t motor1Speed = 0;
     int16_t motor2Speed = 0;
 
-    PIDTunings posPid1 = {2.0f, 0.0f, 0.05f};
-    PIDTunings posPid2 = {2.0f, 0.0f, 0.05f};
-    PIDTunings speedPid1 = {0.6f, 0.02f, 0.0f};
-    PIDTunings speedPid2 = {0.6f, 0.02f, 0.0f};
-    PIDState posState1 = {};
-    PIDState posState2 = {};
-    PIDState speedState1 = {};
-    PIDState speedState2 = {};
+    PIDTunings posPid1 = {DCMT_POS_PID_KP, DCMT_POS_PID_KI, DCMT_POS_PID_KD};
+    PIDTunings posPid2 = {DCMT_POS_PID_KP, DCMT_POS_PID_KI, DCMT_POS_PID_KD};
+    PIDTunings speedPid1 = {DCMT_SPEED_PID_KP, DCMT_SPEED_PID_KI, DCMT_SPEED_PID_KD};
+    PIDTunings speedPid2 = {DCMT_SPEED_PID_KP, DCMT_SPEED_PID_KI, DCMT_SPEED_PID_KD};
 };
 
 struct Timing
 {
     long lastSerialPrint;
-    long lastControlUpdate;
-    long lastSpeedSample;
 };
 
 // ---- Extern globals (defined in main.cpp) ----

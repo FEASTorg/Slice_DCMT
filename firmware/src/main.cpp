@@ -9,12 +9,15 @@
 #include <crumbs.h>
 #include <crumbs_arduino.h>
 #include <LMD18200.h>
-#include <bread/dcmt_ops.h>
 #include <Encoder.h>
-
 #include "config.h"
 #include "config_hardware.h"
 #include "globals.h"
+#include <DCMotorServo.h>
+#if DCMT_ENABLE_SPEED_LOOP
+#include <DCMotorTacho.h>
+#endif
+#include <bread/dcmt_ops.h>
 
 // ---- CRUMBS context ----
 static crumbs_context_t ctx;
@@ -27,14 +30,15 @@ CRGB led;
 LMD18200 motor1Driver(MOTOR1_PWM_PIN, MOTOR1_DIR_PIN, MOTOR1_BRAKE_PIN, MOTOR1_CSENSE_PIN);
 LMD18200 motor2Driver(MOTOR2_PWM_PIN, MOTOR2_DIR_PIN, MOTOR2_BRAKE_PIN, MOTOR2_CSENSE_PIN);
 
+// Encoders
 Encoder motor1Encoder(MOTOR1_ENCODER_PIN1, MOTOR1_ENCODER_PIN2);
 Encoder motor2Encoder(MOTOR2_ENCODER_PIN1, MOTOR2_ENCODER_PIN2);
-static long lastSpeedPos1 = 0;
-static long lastSpeedPos2 = 0;
 
 // Shared state
 DCMT_SLICE slice;
 Timing timing = {0};
+
+static ControlModes appliedMode = OPEN_LOOP;
 
 static int16_t clamp_pwm(long v)
 {
@@ -54,77 +58,89 @@ static int16_t clamp_i16(long v)
     return static_cast<int16_t>(v);
 }
 
-static int16_t pid_step(const PIDTunings &pid, PIDState &state, float error, float dt_s)
+// ---- Hardware adapter wrappers for DCMotorServo ----
+static void motor1_write(int16_t speed)
 {
-    if (dt_s <= 0.0f)
-        dt_s = 0.02f;
-
-    state.integral += error * dt_s;
-    if (state.integral > 600.0f)
-        state.integral = 600.0f;
-    if (state.integral < -600.0f)
-        state.integral = -600.0f;
-
-    const float derivative = (error - state.previousError) / dt_s;
-    state.previousError = error;
-
-    const float output = pid.kp * error + pid.ki * state.integral + pid.kd * derivative;
-    return clamp_pwm(static_cast<long>(output));
+    motor1Driver.write(speed);
 }
 
-static void update_speed_measurement(uint32_t now_ms)
+static void motor1_brake(void)
 {
-    if ((now_ms - timing.lastSpeedSample) < SPEED_SAMPLE_TIME_MS)
-        return;
-
-    const uint32_t dt_ms = static_cast<uint32_t>(now_ms - timing.lastSpeedSample);
-    const long pos1 = motor1Encoder.read();
-    const long pos2 = motor2Encoder.read();
-
-    const long d1 = pos1 - lastSpeedPos1;
-    const long d2 = pos2 - lastSpeedPos2;
-
-    slice.motor1Speed = clamp_i16((d1 * 1000L) / static_cast<long>(dt_ms));
-    slice.motor2Speed = clamp_i16((d2 * 1000L) / static_cast<long>(dt_ms));
-
-    lastSpeedPos1 = pos1;
-    lastSpeedPos2 = pos2;
-    timing.lastSpeedSample = now_ms;
+    motor1Driver.brake();
 }
 
-static void run_closed_loop(uint32_t now_ms)
+static long motor1_read_encoder(void)
 {
-    if ((now_ms - timing.lastControlUpdate) < CONTROL_UPDATE_TIME_MS)
+    return motor1Encoder.read();
+}
+
+static void motor1_write_encoder(long newPosition)
+{
+    motor1Encoder.write(newPosition);
+}
+
+static void motor2_write(int16_t speed)
+{
+    motor2Driver.write(speed);
+}
+
+static void motor2_brake(void)
+{
+    motor2Driver.brake();
+}
+
+static long motor2_read_encoder(void)
+{
+    return motor2Encoder.read();
+}
+
+static void motor2_write_encoder(long newPosition)
+{
+    motor2Encoder.write(newPosition);
+}
+
+// ---- Closed-loop backend ----
+static DCMotorServo servo1(motor1_write, motor1_brake, motor1_read_encoder, motor1_write_encoder);
+static DCMotorServo servo2(motor2_write, motor2_brake, motor2_read_encoder, motor2_write_encoder);
+
+#if DCMT_ENABLE_SPEED_LOOP
+static DCMotorTacho tacho1(&servo1, MOTOR1_CPR, DCMT_TACHO_INTERVAL_MS);
+static DCMotorTacho tacho2(&servo2, MOTOR2_CPR, DCMT_TACHO_INTERVAL_MS);
+#endif
+
+static void stop_control_loops(void)
+{
+    servo1.stop();
+    servo2.stop();
+#if DCMT_ENABLE_SPEED_LOOP
+    tacho1.stop();
+    tacho2.stop();
+#endif
+}
+
+static void apply_mode_transition(void)
+{
+    if (slice.mode == appliedMode)
         return;
 
-    const uint32_t dt_ms = static_cast<uint32_t>(now_ms - timing.lastControlUpdate);
-    const float dt_s = static_cast<float>(dt_ms) / 1000.0f;
-
-    const long pos1 = motor1Encoder.read();
-    const long pos2 = motor2Encoder.read();
-    slice.motor1Position = clamp_i16(pos1);
-    slice.motor2Position = clamp_i16(pos2);
-
-    update_speed_measurement(now_ms);
+    stop_control_loops();
 
     if (slice.mode == CLOSED_LOOP_POSITION)
     {
-        const float err1 = static_cast<float>(slice.motor1PositionSetpoint - slice.motor1Position);
-        const float err2 = static_cast<float>(slice.motor2PositionSetpoint - slice.motor2Position);
-        slice.motor1PWM = pid_step(slice.posPid1, slice.posState1, err1, dt_s);
-        slice.motor2PWM = pid_step(slice.posPid2, slice.posState2, err2, dt_s);
+        // Preserve controller-provided setpoints across mode transitions.
+        servo1.moveTo(slice.motor1PositionSetpoint);
+        servo2.moveTo(slice.motor2PositionSetpoint);
     }
 #if DCMT_ENABLE_SPEED_LOOP
     else if (slice.mode == CLOSED_LOOP_SPEED)
     {
-        const float err1 = static_cast<float>(slice.motor1SpeedSetpoint - slice.motor1Speed);
-        const float err2 = static_cast<float>(slice.motor2SpeedSetpoint - slice.motor2Speed);
-        slice.motor1PWM = pid_step(slice.speedPid1, slice.speedState1, err1, dt_s);
-        slice.motor2PWM = pid_step(slice.speedPid2, slice.speedState2, err2, dt_s);
+        // Preserve controller-provided speed setpoints across mode transitions.
+        tacho1.setSpeedRPM(slice.motor1SpeedSetpoint);
+        tacho2.setSpeedRPM(slice.motor2SpeedSetpoint);
     }
 #endif
 
-    timing.lastControlUpdate = now_ms;
+    appliedMode = slice.mode;
 }
 
 void setup()
@@ -201,7 +217,11 @@ void setupSlice()
 #else
     SLICE_DEBUG_PRINTLN(F("HW Profile: Gen2"));
 #endif
-    SLICE_DEBUG_PRINTLN(F("Control Profile: Open + Closed Position"));
+    SLICE_DEBUG_PRINTLN(F("Closed-loop backend: DCMotorServo"));
+    SLICE_DEBUG_PRINT(F("CPR M1/M2: "));
+    SLICE_DEBUG_PRINT(MOTOR1_CPR);
+    SLICE_DEBUG_PRINT(F("/"));
+    SLICE_DEBUG_PRINTLN(MOTOR2_CPR);
 #if DCMT_ENABLE_SPEED_LOOP
     SLICE_DEBUG_PRINTLN(F("Speed Profile: Enabled"));
 #else
@@ -216,11 +236,30 @@ void setupDCMT()
     motor1Driver.write(0);
     motor2Driver.write(0);
 
+    servo1.setPIDTunings(slice.posPid1.kp, slice.posPid1.ki, slice.posPid1.kd);
+    servo2.setPIDTunings(slice.posPid2.kp, slice.posPid2.ki, slice.posPid2.kd);
+    servo1.setPWMSkip(DCMT_SERVO_PWM_SKIP);
+    servo2.setPWMSkip(DCMT_SERVO_PWM_SKIP);
+    servo1.setMaxPWM(DCMT_SERVO_MAX_PWM);
+    servo2.setMaxPWM(DCMT_SERVO_MAX_PWM);
+    servo1.setAccuracy(DCMT_SERVO_ACCURACY);
+    servo2.setAccuracy(DCMT_SERVO_ACCURACY);
+
+    servo1.setCurrentPosition(motor1Encoder.read());
+    servo2.setCurrentPosition(motor2Encoder.read());
+
+#if DCMT_ENABLE_SPEED_LOOP
+    tacho1.setPIDTunings(slice.speedPid1.kp, slice.speedPid1.ki, slice.speedPid1.kd);
+    tacho2.setPIDTunings(slice.speedPid2.kp, slice.speedPid2.ki, slice.speedPid2.kd);
+    tacho1.setSpeedRPM(0);
+    tacho2.setSpeedRPM(0);
+#endif
+
+    slice.motor1Position = clamp_i16(servo1.getActualPosition());
+    slice.motor2Position = clamp_i16(servo2.getActualPosition());
+
     timing.lastSerialPrint = millis();
-    timing.lastControlUpdate = millis();
-    timing.lastSpeedSample = millis();
-    lastSpeedPos1 = motor1Encoder.read();
-    lastSpeedPos2 = motor2Encoder.read();
+    appliedMode = slice.mode;
 }
 
 // Poll/ISR/processing
@@ -252,11 +291,15 @@ void processEStop()
 {
     if (digitalRead(ESTOP) == HIGH)
     {
+        stop_control_loops();
         motor1Driver.brake();
         motor2Driver.brake();
+
         slice.eStop = true;
         slice.motor1PWM = 0;
         slice.motor2PWM = 0;
+        slice.motor1SpeedSetpoint = 0;
+        slice.motor2SpeedSetpoint = 0;
         SLICE_DEBUG_PRINTLN(F("ESTOP PRESSED!"));
     }
     else
@@ -270,6 +313,7 @@ void motorControlLogic()
 {
     if (slice.eStop)
     {
+        stop_control_loops();
         motor1Driver.write(0);
         motor2Driver.write(0);
         motor1Driver.brake();
@@ -277,34 +321,118 @@ void motorControlLogic()
         return;
     }
 
-    if (slice.mode == CLOSED_LOOP_POSITION
+    apply_mode_transition();
+
+    if (slice.mode == OPEN_LOOP)
+    {
+        if (slice.motor1Brake)
+        {
+            slice.motor1PWM = 0;
+            motor1Driver.write(0);
+            motor1Driver.brake();
+        }
+        else
+        {
+            motor1Driver.write(clamp_pwm(slice.motor1PWM));
+        }
+
+        if (slice.motor2Brake)
+        {
+            slice.motor2PWM = 0;
+            motor2Driver.write(0);
+            motor2Driver.brake();
+        }
+        else
+        {
+            motor2Driver.write(clamp_pwm(slice.motor2PWM));
+        }
+
+        slice.motor1Position = clamp_i16(servo1.getActualPosition());
+        slice.motor2Position = clamp_i16(servo2.getActualPosition());
+        slice.motor1Speed = 0;
+        slice.motor2Speed = 0;
+        return;
+    }
+
+    if (slice.mode == CLOSED_LOOP_POSITION)
+    {
+        servo1.setPIDTunings(slice.posPid1.kp, slice.posPid1.ki, slice.posPid1.kd);
+        servo2.setPIDTunings(slice.posPid2.kp, slice.posPid2.ki, slice.posPid2.kd);
+
+        if (slice.motor1Brake)
+        {
+            slice.motor1PWM = 0;
+            servo1.stop();
+            motor1Driver.brake();
+        }
+        else
+        {
+            servo1.moveTo(slice.motor1PositionSetpoint);
+            servo1.run();
+        }
+
+        if (slice.motor2Brake)
+        {
+            slice.motor2PWM = 0;
+            servo2.stop();
+            motor2Driver.brake();
+        }
+        else
+        {
+            servo2.moveTo(slice.motor2PositionSetpoint);
+            servo2.run();
+        }
+
+        slice.motor1Position = clamp_i16(servo1.getActualPosition());
+        slice.motor2Position = clamp_i16(servo2.getActualPosition());
+        slice.motor1Speed = 0;
+        slice.motor2Speed = 0;
+        return;
+    }
+
 #if DCMT_ENABLE_SPEED_LOOP
-        || slice.mode == CLOSED_LOOP_SPEED
+    if (slice.mode == CLOSED_LOOP_SPEED)
+    {
+        tacho1.setPIDTunings(slice.speedPid1.kp, slice.speedPid1.ki, slice.speedPid1.kd);
+        tacho2.setPIDTunings(slice.speedPid2.kp, slice.speedPid2.ki, slice.speedPid2.kd);
+
+        if (slice.motor1Brake)
+        {
+            slice.motor1PWM = 0;
+            tacho1.stop();
+            motor1Driver.brake();
+            slice.motor1Speed = 0;
+        }
+        else
+        {
+            tacho1.setSpeedRPM(slice.motor1SpeedSetpoint);
+            tacho1.run();
+            slice.motor1Speed = clamp_i16((long)tacho1.getMeasuredSpeedRPM());
+        }
+
+        if (slice.motor2Brake)
+        {
+            slice.motor2PWM = 0;
+            tacho2.stop();
+            motor2Driver.brake();
+            slice.motor2Speed = 0;
+        }
+        else
+        {
+            tacho2.setSpeedRPM(slice.motor2SpeedSetpoint);
+            tacho2.run();
+            slice.motor2Speed = clamp_i16((long)tacho2.getMeasuredSpeedRPM());
+        }
+
+        slice.motor1Position = clamp_i16(servo1.getActualPosition());
+        slice.motor2Position = clamp_i16(servo2.getActualPosition());
+        return;
+    }
 #endif
-    )
-    {
-        run_closed_loop(static_cast<uint32_t>(millis()));
-    }
 
-    if (slice.motor1Brake)
-    {
-        slice.motor1PWM = 0;
-        motor1Driver.write(0);
-        motor1Driver.brake();
-    }
-    else
-    {
-        motor1Driver.write(clamp_pwm(slice.motor1PWM));
-    }
-
-    if (slice.motor2Brake)
-    {
-        slice.motor2PWM = 0;
-        motor2Driver.write(0);
-        motor2Driver.brake();
-    }
-    else
-    {
-        motor2Driver.write(clamp_pwm(slice.motor2PWM));
-    }
+    // Unknown mode: fail safe to open-loop with brakes.
+    slice.mode = OPEN_LOOP;
+    slice.motor1Brake = true;
+    slice.motor2Brake = true;
+    SLICE_DEBUG_PRINTLN(F("ERROR: Unknown mode, forcing OPEN_LOOP with brakes."));
 }

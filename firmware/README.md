@@ -29,6 +29,26 @@ All environments support:
 Speed closed-loop is controlled by `DCMT_ENABLE_SPEED_LOOP`.
 Default behavior is board-dependent (see above), and can be overridden via build flag.
 
+## Closed-Loop Backend
+
+The runtime uses:
+
+- `DCMotorServo` for closed-loop position control
+- `DCMotorTacho` for cascaded closed-loop speed control
+
+Current defaults mirror archive-proven values:
+
+- `MOTOR1_CPR = 798`
+- `MOTOR2_CPR = 798`
+- outer PID defaults: `0.15 / 0.01 / 0.01`
+- inner PID defaults: `0.15 / 0.01 / 0.01`
+- servo PWM skip: `15`
+- servo max PWM: `150`
+- servo accuracy: `10`
+- tacho interval: `5 ms`
+
+Speed commands/capability are only available when `DCMT_ENABLE_SPEED_LOOP=1`.
+
 ## Capability Mapping (`GET_CAPS`)
 
 - Level 2: baseline + closed-position + PID tuning

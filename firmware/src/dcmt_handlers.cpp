@@ -71,10 +71,6 @@ void handler_set_mode(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data
     {
         slice.motor1PWM = 0;
         slice.motor2PWM = 0;
-        slice.posState1 = {};
-        slice.posState2 = {};
-        slice.speedState1 = {};
-        slice.speedState2 = {};
     }
 }
 
