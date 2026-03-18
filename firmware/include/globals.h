@@ -20,6 +20,9 @@ struct PIDTunings
     float kp = 1.0f;
     float ki = 0.0f;
     float kd = 0.0f;
+
+    PIDTunings() = default;
+    PIDTunings(float p, float i, float d) : kp(p), ki(i), kd(d) {}
 };
 
 // ---- Shared state structs ----
