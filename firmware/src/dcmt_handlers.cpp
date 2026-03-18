@@ -87,18 +87,12 @@ void handler_set_setpoint(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *
     if (crumbs_msg_read_i16(data, data_len, 2, &t2) != 0)
         return;
 
-    if (slice.mode == CLOSED_LOOP_POSITION)
-    {
-        slice.motor1PositionSetpoint = t1;
-        slice.motor2PositionSetpoint = t2;
-        return;
-    }
+    // Persist setpoints independent of current mode so controllers can preload.
+    slice.motor1PositionSetpoint = t1;
+    slice.motor2PositionSetpoint = t2;
 #if DCMT_ENABLE_SPEED_LOOP
-    if (slice.mode == CLOSED_LOOP_SPEED)
-    {
-        slice.motor1SpeedSetpoint = t1;
-        slice.motor2SpeedSetpoint = t2;
-    }
+    slice.motor1SpeedSetpoint = t1;
+    slice.motor2SpeedSetpoint = t2;
 #endif
 }
 
@@ -134,18 +128,12 @@ void handler_set_pid(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data,
     const float ki2 = static_cast<float>(ki2_x10) / 10.0f;
     const float kd2 = static_cast<float>(kd2_x10) / 10.0f;
 
-    if (slice.mode == CLOSED_LOOP_POSITION)
-    {
-        slice.posPid1 = {kp1, ki1, kd1};
-        slice.posPid2 = {kp2, ki2, kd2};
-        return;
-    }
+    // Persist PID tunings independent of current mode so controllers can preload.
+    slice.posPid1 = {kp1, ki1, kd1};
+    slice.posPid2 = {kp2, ki2, kd2};
 #if DCMT_ENABLE_SPEED_LOOP
-    if (slice.mode == CLOSED_LOOP_SPEED)
-    {
-        slice.speedPid1 = {kp1, ki1, kd1};
-        slice.speedPid2 = {kp2, ki2, kd2};
-    }
+    slice.speedPid1 = {kp1, ki1, kd1};
+    slice.speedPid2 = {kp2, ki2, kd2};
 #endif
 }
 
