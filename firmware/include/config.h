@@ -26,9 +26,6 @@
 
 #define VERSION "1.0.0" // firmware version, update when making changes
 
-// Uncomment to enable additional debugging messages:
-#define SLICE_DEBUG 1
-
 #ifdef SLICE_DEBUG
 
 #define SLICE_DEBUG_PRINT(...) \
