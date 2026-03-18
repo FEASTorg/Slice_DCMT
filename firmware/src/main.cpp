@@ -367,6 +367,7 @@ void motorControlLogic()
         }
         else
         {
+            // DCMotorServo::moveTo() is idempotent for same-value calls (setpoint assign only).
             servo1.moveTo(slice.motor1PositionSetpoint);
             servo1.run();
         }
