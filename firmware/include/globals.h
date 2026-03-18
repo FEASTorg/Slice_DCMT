@@ -65,6 +65,7 @@ void pollEStop();
 void estopISR();
 void processEStop();
 void motorControlLogic();
+void printSliceState(Print &out);
 void printSerialOutput();
 void serialCommands();
 void handler_set_open_loop(crumbs_context_t *ctx, uint8_t opcode, const uint8_t *data, uint8_t data_len, void *user_data);

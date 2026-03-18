@@ -1,6 +1,20 @@
 // src/serialCommands.cpp
 #include <Arduino.h>
+#include <avr/pgmspace.h>
 #include "globals.h"
+
+static bool starts_with_p(const String &s, PGM_P prefix)
+{
+    size_t n = strlen_P(prefix);
+    if (s.length() < (int)n)
+        return false;
+    return strncmp_P(s.c_str(), prefix, n) == 0;
+}
+
+static bool equals_p(const String &s, PGM_P token)
+{
+    return strcmp_P(s.c_str(), token) == 0;
+}
 
 static bool parse_pid_triplet(const String &s, float &kp, float &ki, float &kd)
 {
@@ -23,18 +37,18 @@ void serialCommands()
     String command = Serial.readStringUntil('\n');
     command.trim();
 
-    if (command.startsWith("MODE="))
+    if (starts_with_p(command, PSTR("MODE=")))
     {
         String mode = command.substring(5);
         mode.trim();
         mode.toUpperCase();
 
-        if (mode == "OPEN")
+        if (equals_p(mode, PSTR("OPEN")))
             slice.mode = OPEN_LOOP;
-        else if (mode == "POS")
+        else if (equals_p(mode, PSTR("POS")))
             slice.mode = CLOSED_LOOP_POSITION;
 #if DCMT_ENABLE_SPEED_LOOP
-        else if (mode == "SPEED")
+        else if (equals_p(mode, PSTR("SPEED")))
             slice.mode = CLOSED_LOOP_SPEED;
 #endif
         else
@@ -57,7 +71,7 @@ void serialCommands()
             Serial.println(F("CLOSED_LOOP_SPEED"));
 #endif
     }
-    else if (command.startsWith("M1PWM="))
+    else if (starts_with_p(command, PSTR("M1PWM=")))
     {
         if (slice.mode != OPEN_LOOP)
         {
@@ -74,7 +88,7 @@ void serialCommands()
         Serial.print(F("M1PWM-> "));
         Serial.println(slice.motor1PWM);
     }
-    else if (command.startsWith("M2PWM="))
+    else if (starts_with_p(command, PSTR("M2PWM=")))
     {
         if (slice.mode != OPEN_LOOP)
         {
@@ -91,19 +105,19 @@ void serialCommands()
         Serial.print(F("M2PWM-> "));
         Serial.println(slice.motor2PWM);
     }
-    else if (command.startsWith("M1POS="))
+    else if (starts_with_p(command, PSTR("M1POS=")))
     {
         slice.motor1PositionSetpoint = (int16_t)command.substring(6).toInt();
         Serial.print(F("M1POS-> "));
         Serial.println(slice.motor1PositionSetpoint);
     }
-    else if (command.startsWith("M2POS="))
+    else if (starts_with_p(command, PSTR("M2POS=")))
     {
         slice.motor2PositionSetpoint = (int16_t)command.substring(6).toInt();
         Serial.print(F("M2POS-> "));
         Serial.println(slice.motor2PositionSetpoint);
     }
-    else if (command.startsWith("PIDPOS="))
+    else if (starts_with_p(command, PSTR("PIDPOS=")))
     {
         float kp = 0.0f;
         float ki = 0.0f;
@@ -118,19 +132,19 @@ void serialCommands()
         Serial.println(F("Position PID updated"));
     }
 #if DCMT_ENABLE_SPEED_LOOP
-    else if (command.startsWith("M1SPEED="))
+    else if (starts_with_p(command, PSTR("M1SPEED=")))
     {
         slice.motor1SpeedSetpoint = (int16_t)command.substring(8).toInt();
         Serial.print(F("M1SPEED-> "));
         Serial.println(slice.motor1SpeedSetpoint);
     }
-    else if (command.startsWith("M2SPEED="))
+    else if (starts_with_p(command, PSTR("M2SPEED=")))
     {
         slice.motor2SpeedSetpoint = (int16_t)command.substring(8).toInt();
         Serial.print(F("M2SPEED-> "));
         Serial.println(slice.motor2SpeedSetpoint);
     }
-    else if (command.startsWith("PIDSPEED="))
+    else if (starts_with_p(command, PSTR("PIDSPEED=")))
     {
         float kp = 0.0f;
         float ki = 0.0f;
@@ -145,69 +159,29 @@ void serialCommands()
         Serial.println(F("Speed PID updated"));
     }
 #endif
-    else if (command == "BRAKE1=1")
+    else if (equals_p(command, PSTR("BRAKE1=1")))
     {
         slice.motor1Brake = true;
         Serial.println(F("Motor1 brake engaged"));
     }
-    else if (command == "BRAKE1=0")
+    else if (equals_p(command, PSTR("BRAKE1=0")))
     {
         slice.motor1Brake = false;
         Serial.println(F("Motor1 brake released"));
     }
-    else if (command == "BRAKE2=1")
+    else if (equals_p(command, PSTR("BRAKE2=1")))
     {
         slice.motor2Brake = true;
         Serial.println(F("Motor2 brake engaged"));
     }
-    else if (command == "BRAKE2=0")
+    else if (equals_p(command, PSTR("BRAKE2=0")))
     {
         slice.motor2Brake = false;
         Serial.println(F("Motor2 brake released"));
     }
-    else if (command == "READ")
+    else if (equals_p(command, PSTR("READ")))
     {
-        Serial.print(F("Mode:"));
-        if (slice.mode == OPEN_LOOP)
-            Serial.print(F("OPEN"));
-        else if (slice.mode == CLOSED_LOOP_POSITION)
-            Serial.print(F("POS"));
-#if DCMT_ENABLE_SPEED_LOOP
-        else
-            Serial.print(F("SPEED"));
-#else
-        else
-            Serial.print(F("UNKNOWN"));
-#endif
-
-        Serial.print(F(", M1PWM:"));
-        Serial.print(slice.motor1PWM);
-        Serial.print(F(", M2PWM:"));
-        Serial.print(slice.motor2PWM);
-        Serial.print(F(", M1POS_SP:"));
-        Serial.print(slice.motor1PositionSetpoint);
-        Serial.print(F(", M2POS_SP:"));
-        Serial.print(slice.motor2PositionSetpoint);
-        Serial.print(F(", M1POS:"));
-        Serial.print(slice.motor1Position);
-        Serial.print(F(", M2POS:"));
-        Serial.print(slice.motor2Position);
-#if DCMT_ENABLE_SPEED_LOOP
-        Serial.print(F(", M1SPD_SP:"));
-        Serial.print(slice.motor1SpeedSetpoint);
-        Serial.print(F(", M2SPD_SP:"));
-        Serial.print(slice.motor2SpeedSetpoint);
-        Serial.print(F(", M1SPD:"));
-        Serial.print(slice.motor1Speed);
-        Serial.print(F(", M2SPD:"));
-        Serial.print(slice.motor2Speed);
-#endif
-        Serial.print(F(", B1:"));
-        Serial.print(slice.motor1Brake);
-        Serial.print(F(", B2:"));
-        Serial.print(slice.motor2Brake);
-        Serial.print(F(", ESTOP:"));
-        Serial.println(slice.eStop);
+        printSliceState(Serial);
     }
     else
     {

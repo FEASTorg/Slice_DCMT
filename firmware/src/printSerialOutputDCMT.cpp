@@ -1,47 +1,58 @@
 #include "globals.h"
 #include "config.h"
 
+void printSliceState(Print &out)
+{
+    out.print(F("Mode:"));
+    if (slice.mode == OPEN_LOOP)
+        out.print(F("OPEN"));
+    else if (slice.mode == CLOSED_LOOP_POSITION)
+        out.print(F("POS"));
+#if DCMT_ENABLE_SPEED_LOOP
+    else
+        out.print(F("SPEED"));
+#else
+    else
+        out.print(F("UNKNOWN"));
+#endif
+
+    out.print(F(", M1PWM:"));
+    out.print(slice.motor1PWM);
+    out.print(F(", M2PWM:"));
+    out.print(slice.motor2PWM);
+    out.print(F(", M1POS_SP:"));
+    out.print(slice.motor1PositionSetpoint);
+    out.print(F(", M2POS_SP:"));
+    out.print(slice.motor2PositionSetpoint);
+    out.print(F(", M1POS:"));
+    out.print(slice.motor1Position);
+    out.print(F(", M2POS:"));
+    out.print(slice.motor2Position);
+#if DCMT_ENABLE_SPEED_LOOP
+    out.print(F(", M1SPD_SP:"));
+    out.print(slice.motor1SpeedSetpoint);
+    out.print(F(", M2SPD_SP:"));
+    out.print(slice.motor2SpeedSetpoint);
+    out.print(F(", M1SPD:"));
+    out.print(slice.motor1Speed);
+    out.print(F(", M2SPD:"));
+    out.print(slice.motor2Speed);
+#endif
+    out.print(F(", B1:"));
+    out.print(slice.motor1Brake);
+    out.print(F(", B2:"));
+    out.print(slice.motor2Brake);
+    out.print(F(", ESTOP:"));
+    out.println(slice.eStop);
+}
+
 void printSerialOutput()
 {
     if (millis() - timing.lastSerialPrint >= SERIAL_UPDATE_TIME_MS)
     {
-        SLICE_DEBUG_PRINT(F("MODE:"));
-        if (slice.mode == OPEN_LOOP)
-            SLICE_DEBUG_PRINT(F("OPEN"));
-        else if (slice.mode == CLOSED_LOOP_POSITION)
-            SLICE_DEBUG_PRINT(F("POS"));
-#if DCMT_ENABLE_SPEED_LOOP
-        else
-            SLICE_DEBUG_PRINT(F("SPEED"));
-#else
-        else
-            SLICE_DEBUG_PRINT(F("UNKNOWN"));
+#ifdef SLICE_DEBUG
+        printSliceState(Serial);
 #endif
-
-        SLICE_DEBUG_PRINT(F(", Motor1PWM:"));
-        SLICE_DEBUG_PRINT(slice.motor1PWM);
-        SLICE_DEBUG_PRINT(F(", Motor2PWM:"));
-        SLICE_DEBUG_PRINT(slice.motor2PWM);
-        SLICE_DEBUG_PRINT(F(", M1POS_SP:"));
-        SLICE_DEBUG_PRINT(slice.motor1PositionSetpoint);
-        SLICE_DEBUG_PRINT(F(", M2POS_SP:"));
-        SLICE_DEBUG_PRINT(slice.motor2PositionSetpoint);
-        SLICE_DEBUG_PRINT(F(", M1POS:"));
-        SLICE_DEBUG_PRINT(slice.motor1Position);
-        SLICE_DEBUG_PRINT(F(", M2POS:"));
-        SLICE_DEBUG_PRINT(slice.motor2Position);
-#if DCMT_ENABLE_SPEED_LOOP
-        SLICE_DEBUG_PRINT(F(", M1SPD_SP:"));
-        SLICE_DEBUG_PRINT(slice.motor1SpeedSetpoint);
-        SLICE_DEBUG_PRINT(F(", M2SPD_SP:"));
-        SLICE_DEBUG_PRINT(slice.motor2SpeedSetpoint);
-        SLICE_DEBUG_PRINT(F(", M1SPD:"));
-        SLICE_DEBUG_PRINT(slice.motor1Speed);
-        SLICE_DEBUG_PRINT(F(", M2SPD:"));
-        SLICE_DEBUG_PRINT(slice.motor2Speed);
-#endif
-        SLICE_DEBUG_PRINT(F(", ESTOP:"));
-        SLICE_DEBUG_PRINTLN(slice.eStop);
         timing.lastSerialPrint = millis();
     }
 }
