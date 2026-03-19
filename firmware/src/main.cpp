@@ -26,6 +26,10 @@ static crumbs_context_t ctx;
 volatile bool estopTriggered = false;
 CRGB led;
 
+static const unsigned long ESTOP_DEBOUNCE_MS = 25;
+static bool estopDebouncePending = false;
+static unsigned long estopDebounceStartMs = 0;
+
 // Motor drivers
 LMD18200 motor1Driver(MOTOR1_PWM_PIN, MOTOR1_DIR_PIN, MOTOR1_BRAKE_PIN, MOTOR1_CSENSE_PIN);
 LMD18200 motor2Driver(MOTOR2_PWM_PIN, MOTOR2_DIR_PIN, MOTOR2_BRAKE_PIN, MOTOR2_CSENSE_PIN);
@@ -206,9 +210,10 @@ void setupSlice()
     led = CRGB::Blue;
     FastLED.show();
 
-    // e-stop
-    pinMode(ESTOP, INPUT);
+    // e-stop: no external bias resistor on current boards, so use internal pull-up.
+    pinMode(ESTOP, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(ESTOP), estopISR, CHANGE);
+    estopTriggered = true; // Force initial debounced state sync after boot.
 
     SLICE_DEBUG_PRINTLN(F("DCMT SLICE INITIALIZED"));
     SLICE_DEBUG_PRINTLN(F("VERSION: " VERSION));
@@ -267,8 +272,15 @@ void pollEStop()
 {
     if (estopTriggered)
     {
-        processEStop();
         estopTriggered = false;
+        estopDebouncePending = true;
+        estopDebounceStartMs = millis();
+    }
+
+    if (estopDebouncePending && (millis() - estopDebounceStartMs >= ESTOP_DEBOUNCE_MS))
+    {
+        processEStop();
+        estopDebouncePending = false;
     }
 
     if (slice.eStop)
@@ -289,7 +301,8 @@ void estopISR()
 
 void processEStop()
 {
-    if (digitalRead(ESTOP) == HIGH)
+    // Internal pull-up means asserted e-stop pulls the line LOW.
+    if (digitalRead(ESTOP) == LOW)
     {
         stop_control_loops();
         motor1Driver.brake();
