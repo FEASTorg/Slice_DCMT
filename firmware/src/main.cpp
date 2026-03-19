@@ -271,7 +271,12 @@ void setupSlice()
     estopTriggered = true; // Force initial debounced state sync after boot.
 
     SLICE_DEBUG_PRINTLN(F("DCMT SLICE INITIALIZED"));
-    SLICE_DEBUG_PRINTLN(F("VERSION: " VERSION));
+    SLICE_DEBUG_PRINT(F("VERSION: "));
+    SLICE_DEBUG_PRINT(DCMT_MODULE_VER_MAJOR);
+    SLICE_DEBUG_PRINT(F("."));
+    SLICE_DEBUG_PRINT(DCMT_MODULE_VER_MINOR);
+    SLICE_DEBUG_PRINT(F("."));
+    SLICE_DEBUG_PRINTLN(DCMT_MODULE_VER_PATCH);
 #if (DCMT_HW_GEN == 1)
     SLICE_DEBUG_PRINTLN(F("HW Profile: Gen1"));
 #else
