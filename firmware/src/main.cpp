@@ -336,15 +336,16 @@ void pollEStop()
         estopDebouncePending = false;
     }
 
-    if (slice.eStop)
     {
-        led = CRGB::Red;
+        static CRGB lastLed = CRGB::Black;
+        CRGB next = slice.eStop ? CRGB::Red : CRGB::Green;
+        if (next != lastLed)
+        {
+            led = next;
+            FastLED.show();
+            lastLed = next;
+        }
     }
-    else
-    {
-        led = CRGB::Green;
-    }
-    FastLED.show();
 }
 
 void estopISR()
