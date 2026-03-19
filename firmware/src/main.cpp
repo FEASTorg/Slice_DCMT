@@ -18,6 +18,7 @@
 #include <DCMotorTacho.h>
 #endif
 #include <bread/dcmt_ops.h>
+#include <math.h>
 
 // ---- CRUMBS context ----
 static crumbs_context_t ctx;
@@ -44,6 +45,16 @@ Timing timing = {0};
 
 static ControlModes appliedMode = OPEN_LOOP;
 
+static PIDTunings appliedPosPid1;
+static PIDTunings appliedPosPid2;
+static bool positionPidApplied = false;
+
+#if DCMT_ENABLE_SPEED_LOOP
+static PIDTunings appliedSpeedPid1;
+static PIDTunings appliedSpeedPid2;
+static bool speedPidApplied = false;
+#endif
+
 static int16_t clamp_pwm(long v)
 {
     if (v < -255)
@@ -61,6 +72,50 @@ static int16_t clamp_i16(long v)
         return 32767;
     return static_cast<int16_t>(v);
 }
+
+static bool pid_tunings_equal(const PIDTunings &a, const PIDTunings &b)
+{
+    const float eps = 0.0001f;
+    return fabsf(a.kp - b.kp) < eps &&
+           fabsf(a.ki - b.ki) < eps &&
+           fabsf(a.kd - b.kd) < eps;
+}
+
+static void apply_position_pid_if_needed(void)
+{
+    if (positionPidApplied &&
+        pid_tunings_equal(appliedPosPid1, slice.posPid1) &&
+        pid_tunings_equal(appliedPosPid2, slice.posPid2))
+    {
+        return;
+    }
+
+    servo1.setPIDTunings(slice.posPid1.kp, slice.posPid1.ki, slice.posPid1.kd);
+    servo2.setPIDTunings(slice.posPid2.kp, slice.posPid2.ki, slice.posPid2.kd);
+
+    appliedPosPid1 = slice.posPid1;
+    appliedPosPid2 = slice.posPid2;
+    positionPidApplied = true;
+}
+
+#if DCMT_ENABLE_SPEED_LOOP
+static void apply_speed_pid_if_needed(void)
+{
+    if (speedPidApplied &&
+        pid_tunings_equal(appliedSpeedPid1, slice.speedPid1) &&
+        pid_tunings_equal(appliedSpeedPid2, slice.speedPid2))
+    {
+        return;
+    }
+
+    tacho1.setPIDTunings(slice.speedPid1.kp, slice.speedPid1.ki, slice.speedPid1.kd);
+    tacho2.setPIDTunings(slice.speedPid2.kp, slice.speedPid2.ki, slice.speedPid2.kd);
+
+    appliedSpeedPid1 = slice.speedPid1;
+    appliedSpeedPid2 = slice.speedPid2;
+    speedPidApplied = true;
+}
+#endif
 
 // ---- Hardware adapter wrappers for DCMotorServo ----
 static void motor1_write(int16_t speed)
@@ -241,8 +296,7 @@ void setupDCMT()
     motor1Driver.write(0);
     motor2Driver.write(0);
 
-    servo1.setPIDTunings(slice.posPid1.kp, slice.posPid1.ki, slice.posPid1.kd);
-    servo2.setPIDTunings(slice.posPid2.kp, slice.posPid2.ki, slice.posPid2.kd);
+    apply_position_pid_if_needed();
     servo1.setPWMSkip(DCMT_SERVO_PWM_SKIP);
     servo2.setPWMSkip(DCMT_SERVO_PWM_SKIP);
     servo1.setMaxPWM(DCMT_SERVO_MAX_PWM);
@@ -254,8 +308,7 @@ void setupDCMT()
     servo2.setCurrentPosition(motor2Encoder.read());
 
 #if DCMT_ENABLE_SPEED_LOOP
-    tacho1.setPIDTunings(slice.speedPid1.kp, slice.speedPid1.ki, slice.speedPid1.kd);
-    tacho2.setPIDTunings(slice.speedPid2.kp, slice.speedPid2.ki, slice.speedPid2.kd);
+    apply_speed_pid_if_needed();
     tacho1.setSpeedRPM(0);
     tacho2.setSpeedRPM(0);
 #endif
@@ -369,8 +422,7 @@ void motorControlLogic()
 
     if (slice.mode == CLOSED_LOOP_POSITION)
     {
-        servo1.setPIDTunings(slice.posPid1.kp, slice.posPid1.ki, slice.posPid1.kd);
-        servo2.setPIDTunings(slice.posPid2.kp, slice.posPid2.ki, slice.posPid2.kd);
+        apply_position_pid_if_needed();
 
         if (slice.motor1Brake)
         {
@@ -407,8 +459,7 @@ void motorControlLogic()
 #if DCMT_ENABLE_SPEED_LOOP
     if (slice.mode == CLOSED_LOOP_SPEED)
     {
-        tacho1.setPIDTunings(slice.speedPid1.kp, slice.speedPid1.ki, slice.speedPid1.kd);
-        tacho2.setPIDTunings(slice.speedPid2.kp, slice.speedPid2.ki, slice.speedPid2.kd);
+        apply_speed_pid_if_needed();
 
         if (slice.motor1Brake)
         {
