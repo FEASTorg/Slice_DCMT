@@ -155,34 +155,44 @@ void reply_get_state(crumbs_context_t *ctx, crumbs_message_t *reply, void *user_
     if (slice.motor2Brake)
         brakes |= 0x02;
 
-    crumbs_msg_init(reply, DCMT_TYPE_ID, DCMT_OP_GET_STATE);
-    crumbs_msg_add_u8(reply, static_cast<uint8_t>(slice.mode));
-
+    // sp1/sp2: no setpoint concept in open-loop — emit BREAD_INVALID_I16.
+    // In closed-loop modes, emit the setpoint for the active loop type.
+    int16_t sp1 = BREAD_INVALID_I16;
+    int16_t sp2 = BREAD_INVALID_I16;
     if (slice.mode == CLOSED_LOOP_POSITION)
     {
-        crumbs_msg_add_i16(reply, slice.motor1PositionSetpoint);
-        crumbs_msg_add_i16(reply, slice.motor2PositionSetpoint);
-        crumbs_msg_add_i16(reply, slice.motor1Position);
-        crumbs_msg_add_i16(reply, slice.motor2Position);
-        crumbs_msg_add_u8(reply, brakes);
-        crumbs_msg_add_u8(reply, slice.eStop ? 1 : 0);
-        return;
+        sp1 = slice.motor1PositionSetpoint;
+        sp2 = slice.motor2PositionSetpoint;
     }
 #if DCMT_ENABLE_SPEED_LOOP
-    if (slice.mode == CLOSED_LOOP_SPEED)
+    else if (slice.mode == CLOSED_LOOP_SPEED)
     {
-        crumbs_msg_add_i16(reply, slice.motor1SpeedSetpoint);
-        crumbs_msg_add_i16(reply, slice.motor2SpeedSetpoint);
-        crumbs_msg_add_i16(reply, slice.motor1Speed);
-        crumbs_msg_add_i16(reply, slice.motor2Speed);
-        crumbs_msg_add_u8(reply, brakes);
-        crumbs_msg_add_u8(reply, slice.eStop ? 1 : 0);
-        return;
+        sp1 = slice.motor1SpeedSetpoint;
+        sp2 = slice.motor2SpeedSetpoint;
     }
 #endif
 
+    // spd1/spd2: tachometer only runs in CLOSED_LOOP_SPEED — BREAD_INVALID_I16 otherwise.
+#if DCMT_ENABLE_SPEED_LOOP
+    int16_t spd1 = (slice.mode == CLOSED_LOOP_SPEED) ? slice.motor1Speed : BREAD_INVALID_I16;
+    int16_t spd2 = (slice.mode == CLOSED_LOOP_SPEED) ? slice.motor2Speed : BREAD_INVALID_I16;
+#else
+    int16_t spd1 = BREAD_INVALID_I16;
+    int16_t spd2 = BREAD_INVALID_I16;
+#endif
+
+    crumbs_msg_init(reply, DCMT_TYPE_ID, DCMT_OP_GET_STATE);
+    crumbs_msg_add_u8(reply, static_cast<uint8_t>(slice.mode));
+    // Fixed payload layout across all modes:
+    // [mode][m1_pwm][m2_pwm][sp1][sp2][pos1][pos2][spd1][spd2][brakes][estop]
     crumbs_msg_add_i16(reply, slice.motor1PWM);
     crumbs_msg_add_i16(reply, slice.motor2PWM);
+    crumbs_msg_add_i16(reply, sp1);
+    crumbs_msg_add_i16(reply, sp2);
+    crumbs_msg_add_i16(reply, slice.motor1Position);
+    crumbs_msg_add_i16(reply, slice.motor2Position);
+    crumbs_msg_add_i16(reply, spd1);
+    crumbs_msg_add_i16(reply, spd2);
     crumbs_msg_add_u8(reply, brakes);
     crumbs_msg_add_u8(reply, slice.eStop ? 1 : 0);
 }
