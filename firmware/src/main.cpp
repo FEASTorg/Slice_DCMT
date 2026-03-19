@@ -66,8 +66,8 @@ static int16_t clamp_pwm(long v)
 
 static int16_t clamp_i16(long v)
 {
-    if (v < -32768)
-        return -32768;
+    if (v < -32767)
+        return -32767;
     if (v > 32767)
         return 32767;
     return static_cast<int16_t>(v);
