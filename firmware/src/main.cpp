@@ -81,42 +81,6 @@ static bool pid_tunings_equal(const PIDTunings &a, const PIDTunings &b)
            fabsf(a.kd - b.kd) < eps;
 }
 
-static void apply_position_pid_if_needed(void)
-{
-    if (positionPidApplied &&
-        pid_tunings_equal(appliedPosPid1, slice.posPid1) &&
-        pid_tunings_equal(appliedPosPid2, slice.posPid2))
-    {
-        return;
-    }
-
-    servo1.setPIDTunings(slice.posPid1.kp, slice.posPid1.ki, slice.posPid1.kd);
-    servo2.setPIDTunings(slice.posPid2.kp, slice.posPid2.ki, slice.posPid2.kd);
-
-    appliedPosPid1 = slice.posPid1;
-    appliedPosPid2 = slice.posPid2;
-    positionPidApplied = true;
-}
-
-#if DCMT_ENABLE_SPEED_LOOP
-static void apply_speed_pid_if_needed(void)
-{
-    if (speedPidApplied &&
-        pid_tunings_equal(appliedSpeedPid1, slice.speedPid1) &&
-        pid_tunings_equal(appliedSpeedPid2, slice.speedPid2))
-    {
-        return;
-    }
-
-    tacho1.setPIDTunings(slice.speedPid1.kp, slice.speedPid1.ki, slice.speedPid1.kd);
-    tacho2.setPIDTunings(slice.speedPid2.kp, slice.speedPid2.ki, slice.speedPid2.kd);
-
-    appliedSpeedPid1 = slice.speedPid1;
-    appliedSpeedPid2 = slice.speedPid2;
-    speedPidApplied = true;
-}
-#endif
-
 // ---- Hardware adapter wrappers for DCMotorServo ----
 static void motor1_write(int16_t speed)
 {
@@ -176,6 +140,42 @@ static void stop_control_loops(void)
     tacho2.stop();
 #endif
 }
+
+static void apply_position_pid_if_needed(void)
+{
+    if (positionPidApplied &&
+        pid_tunings_equal(appliedPosPid1, slice.posPid1) &&
+        pid_tunings_equal(appliedPosPid2, slice.posPid2))
+    {
+        return;
+    }
+
+    servo1.setPIDTunings(slice.posPid1.kp, slice.posPid1.ki, slice.posPid1.kd);
+    servo2.setPIDTunings(slice.posPid2.kp, slice.posPid2.ki, slice.posPid2.kd);
+
+    appliedPosPid1 = slice.posPid1;
+    appliedPosPid2 = slice.posPid2;
+    positionPidApplied = true;
+}
+
+#if DCMT_ENABLE_SPEED_LOOP
+static void apply_speed_pid_if_needed(void)
+{
+    if (speedPidApplied &&
+        pid_tunings_equal(appliedSpeedPid1, slice.speedPid1) &&
+        pid_tunings_equal(appliedSpeedPid2, slice.speedPid2))
+    {
+        return;
+    }
+
+    tacho1.setPIDTunings(slice.speedPid1.kp, slice.speedPid1.ki, slice.speedPid1.kd);
+    tacho2.setPIDTunings(slice.speedPid2.kp, slice.speedPid2.ki, slice.speedPid2.kd);
+
+    appliedSpeedPid1 = slice.speedPid1;
+    appliedSpeedPid2 = slice.speedPid2;
+    speedPidApplied = true;
+}
+#endif
 
 static void apply_mode_transition(void)
 {
